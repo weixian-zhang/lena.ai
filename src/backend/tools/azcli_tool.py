@@ -36,13 +36,12 @@ class AzCliTool(BaseTool):
     #     return self
     
 
-    def _run(self, prompt: str) -> str:
+    def _run(self, prompt: str) -> list[str]:
         """The synchronous method that the agent will call."""
         # This is where your custom logic or API call goes
-        azclicmd = self.azcli_tool.invoke({"intent": prompt})
-        return azclicmd
+        raise NotImplementedError("Synchronous execution is not implemented. Please use the asynchronous method '_arun'.")
 
-    async def _arun(self, prompt: str) -> str:
+    async def _arun(self, prompt: str) -> list[str]:
         """The asynchronous method for the tool (optional)."""
 
         try:
@@ -67,7 +66,7 @@ class AzCliTool(BaseTool):
                     tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
 
                     result = await tools[0].ainvoke(input={
-                        "intent": "Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size.",
+                        "intent": prompt,
                         "cli-type": "az"
                     })
 
@@ -76,7 +75,8 @@ class AzCliTool(BaseTool):
                     for r in result:
                         td = json.loads(r['text'])
                         success = True if td.get('message', '').lower() == 'success' else False
-                        command_data = json.td.get('results', '').get('command', '{}')
+                        command_data = td.get('results', '').get('command', '{}')
+                        command_data = json.loads(command_data)
 
                         for cd in command_data.get('data', []):
                             for cs in cd.get('commandSet', []):
@@ -95,39 +95,37 @@ class AzCliTool(BaseTool):
         # Your internal async business logic
         return f"Async internal success for {summary}"
     
-    async def _load_azure_mcp_azcli_tool(self) -> Tool:
-        server_params = StdioServerParameters(
-            command="npx",
-            args=["-y", "@azure/mcp@latest", "server", "start"],
-            env=None
-        )
+    # async def _load_azure_mcp_azcli_tool(self) -> Tool:
+    #     server_params = StdioServerParameters(
+    #         command="npx",
+    #         args=["-y", "@azure/mcp@latest", "server", "start"],
+    #         env=None
+    #     )
 
-        async with stdio_client(server_params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
+    #     async with stdio_client(server_params) as (read, write):
+    #         async with ClientSession(read, write) as session:
+    #             await session.initialize()
 
-                # Load the MCP tools into a list of LangChain BaseTool objects
-                langchain_tools: list[BaseTool] = await load_mcp_tools(session)
+    #             # Load the MCP tools into a list of LangChain BaseTool objects
+    #             langchain_tools: list[BaseTool] = await load_mcp_tools(session)
 
-                # List available tools
-                # tools = await session.list_tools()
-                # for tool in tools.tools: print(tool.name)
+    #             langchain_tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
 
-                # Format tools for Azure OpenAI
-                tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
+    #             result = await langchain_tools[0].ainvoke(input={
+    #                 "intent": """
+    #                 create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
+    #                 Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
+    #                 """,
+    #                 "cli-type": "az"
+    #             })
 
-                result = await tools[0].ainvoke(input={
-                    "intent": "Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size.",
-                    "cli-type": "az"
-                })
+    #             az_cmds = []
 
-                az_cmds = []
+    #             for r in result:
 
-                for r in result:
+    #                 az_cmds.append(json.loads(r['text']))
 
-                    az_cmds.append(json.loads(r['text']))
-
-                pass
+    #             pass
 
 
         # mcp_config = {
@@ -175,9 +173,12 @@ if __name__ == "__main__":
     import asyncio
 
     async def main():
-        azcli_tool_instance = await AzCliTool()
+        azcli_tool_instance = AzCliTool()
         result = await azcli_tool_instance.ainvoke(
-            {'prompt': "Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size."}
+            {'prompt': """
+            create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
+            Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
+             """}
         )
         print(result)
 
