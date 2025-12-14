@@ -13,8 +13,8 @@ class AzCliToolSchema(BaseModel):
     prompt: str = Field(description="'The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.'")
 
 class AzCliToolResult(BaseModel):
-    success: bool = Field(description="'Indicates whether the Azure CLI command was generated successfully.'")
-    az_cli_commands: list[str] = Field(description="'The generated Azure CLI command as a string.'")
+    success: bool = Field(default=False, description="'Indicates whether the Azure CLI command was generated successfully.'")
+    az_commands: list[str] = Field(default=[], description="'The generated Azure CLI command as a string.'")
 
 class AzCliTool(BaseTool):
     """
@@ -24,24 +24,14 @@ class AzCliTool(BaseTool):
     description: str = "'This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.'"
     args_schema: Type[BaseModel] = AzCliToolSchema
     azcli_tool: Tool = Field(default=None, description="The Azure CLI tool loaded from MCP session.")
-
-    # def __init__(self):
-    #     self.azcli_tool: Tool = None
-
-    # @classmethod
-    # async def create(cls):
-    #     self = cls()
-    #     azcli_tool = await self._load_azure_mcp_azcli_tool()
-    #     self.azcli_tool = azcli_tool
-    #     return self
     
 
-    def _run(self, prompt: str) -> list[str]:
+    def _run(self, prompt: str) -> AzCliToolResult:
         """The synchronous method that the agent will call."""
         # This is where your custom logic or API call goes
         raise NotImplementedError("Synchronous execution is not implemented. Please use the asynchronous method '_arun'.")
 
-    async def _arun(self, prompt: str) -> list[str]:
+    async def _arun(self, prompt: str) -> AzCliToolResult:
         """The asynchronous method for the tool (optional)."""
 
         try:
@@ -70,19 +60,19 @@ class AzCliTool(BaseTool):
                         "cli-type": "az"
                     })
 
-                    az_cmds = []
+                    azcli_result = AzCliToolResult()
 
                     for r in result:
                         td = json.loads(r['text'])
-                        success = True if td.get('message', '').lower() == 'success' else False
+                        azcli_result.success = True if td.get('message', '').lower() == 'success' else False
                         command_data = td.get('results', '').get('command', '{}')
                         command_data = json.loads(command_data)
 
                         for cd in command_data.get('data', []):
                             for cs in cd.get('commandSet', []):
-                                az_cmds.append(cs.get('example', ''))
+                                azcli_result.az_commands.append(cs.get('example', ''))
 
-                    return az_cmds
+                    return azcli_result
         except Exception as e:
             raise Exception(f"Error generating Azure CLI command: {e}") from e
         
@@ -95,6 +85,23 @@ class AzCliTool(BaseTool):
         # Your internal async business logic
         return f"Async internal success for {summary}"
     
+
+if __name__ == "__main__":
+    import asyncio
+
+    async def main():
+        azcli_tool_instance = AzCliTool()
+        result = await azcli_tool_instance.ainvoke(
+            {'prompt': """
+            create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
+            Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
+             """}
+        )
+        print(result)
+
+    asyncio.run(main())
+
+
     # async def _load_azure_mcp_azcli_tool(self) -> Tool:
     #     server_params = StdioServerParameters(
     #         command="npx",
@@ -169,26 +176,5 @@ class AzCliTool(BaseTool):
     #     return {}
     
 
-if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        azcli_tool_instance = AzCliTool()
-        result = await azcli_tool_instance.ainvoke(
-            {'prompt': """
-            create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
-            Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
-             """}
-        )
-        print(result)
-
-    asyncio.run(main())
 
 
-
-    '{"status":200,'
-    '"message":"Success",'
-    '"results":{'
-    '"command":"{\\u0022data\\u0022: [{\\u0022scenario\\u0022: \\u0022Create a virtual machine named \\u0027myVM\\u0027 in resource group \\u0027myResourceGroup\\u0027 with UbuntuLTS image and Standard_DS1_v2 size.\\u0022, \\u0022description\\u0022: \\u0022Create a virtual machine named \\u0027myVM\\u0027 in the specified resource group with UbuntuLTS image and Standard_DS1_v2 size, generating SSH keys for access.\\u0022, \\u0022commandSet\\u0022: [{\\u0022reason\\u0022: \\u0022Create a virtual machine with specified parameters including image and size.\\u0022, \\u0022example\\u0022: \\u0022az vm create --resource-group myResourceGroup --name myVM --image Ubuntu2204 --size Standard_DS1_v2 --generate-ssh-keys\\u0022, \\u0022command\\u0022: \\u0022az vm create\\u0022, \\u0022arguments\\u0022: [\\u0022--resource-group\\u0022, \\u0022--name\\u0022, \\u0022--image\\u0022, \\u0022--size\\u0022, \\u0022--generate-ssh-keys\\u0022]}]}], \\u0022error\\u0022: null, \\u0022status\\u0022: 200, \\u0022api_version\\u0022: \\u00221.0.0-prod-20251020.1\\u0022}",'
-    '"cliType":"az"},'
-    '"duration":0}'
