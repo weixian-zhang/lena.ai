@@ -89,13 +89,17 @@ class AzCliTool(BaseTool):
 if __name__ == "__main__":
     import asyncio
 
+    prompt_1 = """
+            create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
+            Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
+             """
+    
+    prompt_2 = "update Storage account with name 'strgcwhd', set Allow storage account key access to true."
+
     async def main():
         azcli_tool_instance = AzCliTool()
         result = await azcli_tool_instance.ainvoke(
-            {'prompt': """
-            create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
-            Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
-             """}
+            {'prompt': prompt_2}
         )
         print(result)
 
