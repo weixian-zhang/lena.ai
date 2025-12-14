@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from typing import Type
 from langchain_mcp_adapters.client import MultiServerMCPClient
 import json
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -15,6 +16,7 @@ class AzCliToolSchema(BaseModel):
 class AzCliToolResult(BaseModel):
     success: bool = Field(default=False, description="'Indicates whether the Azure CLI command was generated successfully.'")
     az_commands: list[str] = Field(default=[], description="'The generated Azure CLI command as a string.'")
+    error: str = Field(default='', description="'Error message if the command generation failed.'")
 
 class AzCliTool(BaseTool):
     """
@@ -55,6 +57,13 @@ class AzCliTool(BaseTool):
                     # Format tools for Azure OpenAI
                     tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
 
+                    if not tools or len(tools) != 1:
+                        return AzCliToolResult(
+                            success=False,
+                            az_commands=[],
+                            error="Error at Azure MCP tools, expected exactly one Azure CLI generation tool.")
+                    
+
                     result = await tools[0].ainvoke(input={
                         "intent": prompt,
                         "cli-type": "az"
@@ -74,7 +83,10 @@ class AzCliTool(BaseTool):
 
                     return azcli_result
         except Exception as e:
-            raise Exception(f"Error generating Azure CLI command: {e}") from e
+            azcli_result = AzCliToolResult(success=False, 
+                                           az_commands=[],
+                                           error=str(e))
+            # raise Exception(f"Error generating Azure CLI command: {e}") from e
         
 
     def _add_event_internal(self, summary, start, end):
