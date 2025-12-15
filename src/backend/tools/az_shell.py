@@ -29,17 +29,6 @@ class AzShell:
         self.tenant_id = os.getenv("AZURE_TENANT_ID")
         self.subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
 
-    # def _load_service_principal_credentials(self):
-    #     """
-    #     Load service principal credentials from environment variables.
-    #     """
-    #     import os
-
-    #     self.client_id = os.getenv("AZURE_CLIENT_ID")
-    #     self.client_secret = os.getenv("AZURE_CLIENT_SECRET")
-    #     self.tenant_id = os.getenv("AZURE_TENANT_ID")
-    #     self.subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
-
 
     async def _read_stream(stream):
         lines = []
@@ -62,9 +51,6 @@ class AzShell:
         
         while True:
 
-            # if asyncio.get_event_loop().time() - start_time > timeout:
-            #         raise asyncio.TimeoutError(f"Command timed out: {command}")
-            
             try:
                 line = await asyncio.wait_for(process.stdout.readline(), timeout=timeout)
                 if not line:  # EOF
@@ -80,14 +66,16 @@ class AzShell:
 
 
         stderr = []
+        is_warning = False
         err_while_get_stderr = ''
         
         while True:
             try:
                 line = await asyncio.wait_for(process.stderr.readline(), timeout=timeout)
                 line_str = line.decode().strip()
+                if not is_warning and '[Warning]' in line.decode():
+                    is_warning = True
                 stderr.append(line_str)
-                #line = await asyncio.wait_for(process.stderr.readline(), timeout=timeout)
             except asyncio.TimeoutError:
                 break
             except Exception as e:
@@ -118,42 +106,20 @@ class AzShell:
             TimeoutError: If command exceeds timeout
             RuntimeError: If command returns non-zero exit code
         """
-        # Start an interactive bash shell
-        process = await asyncio.create_subprocess_shell(
+        
+
+        try:
+
+            # Start an interactive bash shell
+            process = await asyncio.create_subprocess_shell(
             "bash",  # or "zsh", "sh", etc.
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
 
-        # process = subprocess.Popen(
-        #     ['bash'], # Use 'cmd.exe' on Windows
-        #     stdin=subprocess.PIPE,
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.PIPE,
-        #     text=True, # For Python 3, handle as text
-        #     shell=False # We are managing the shell ourselves
-        # )
-
-        try:
-            # stdout, stderr = await asyncio.wait_for(
-            #     process.communicate(),
-            #     timeout=timeout
-            # )
-
             # Azure authn with service principal
             az_login = f"az login --service-principal -u {self.client_id} -p {self.client_secret} --tenant {self.tenant_id}"
-
-            # process.stdin.write(az_login)
-            # process.stdin.flush() # Ensure the command is sent immediately
-            # # stdout, stderr = process.communicate()
-            
-            # stdout, stderr = [], []
-            # for line in process.stdout:
-            #     stdout.append(line.decode().strip())
-
-            # for line in process.stderr:
-            #     stderr.append(line.decode().strip())
 
             process.stdin.write(f"{az_login}\n".encode())
             await process.stdin.drain()
@@ -186,17 +152,6 @@ class AzShell:
             return shell_result
 
 
-            # # Decode output
-            # stdout_str = stdout.decode() if stdout else ""
-            # stderr_str = stderr.decode() if stderr else ""
-
-            # shell_result = ShellResult(
-            #     success=(process.returncode == 0),
-            #     output=stdout_str,
-            #     error=stderr_str if process.returncode != 0 else None
-            # )
-
-
         except Exception as e:
             return AzShellResult(
                     success=False,
@@ -206,20 +161,3 @@ class AzShell:
         finally:
             process.kill()
             await process.wait()
-    
-
-
-
-    # async def run_command_background(self, command: str) -> asyncio.subprocess.Process:
-    #     """
-    #     Run a command asynchronously in the background without blocking.
-    #     Returns immediately with the process object.
-    #     """
-    #     process = await asyncio.create_subprocess_shell(
-    #         command,
-    #         stdout=asyncio.subprocess.PIPE,
-    #         stderr=asyncio.subprocess.PIPE
-    #     )
-    #     print(f"Started background process with PID: {process.pid}")
-    #     return process
-
