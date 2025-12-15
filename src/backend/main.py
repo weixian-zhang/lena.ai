@@ -1,7 +1,6 @@
-from tools.az_shell import AzShell, AzShellResult
-from tools.azcli_cmd_tool import AzCliTool, AzCliToolResult
+from tools.azshell import AzShell, AzShellResult
+from tools.azcli_tool import AzCliTool, AzCliToolResult
 from dotenv import load_dotenv
-from azure.identity import DefaultAzureCredential
 load_dotenv()
 
 

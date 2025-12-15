@@ -4,9 +4,8 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp.client.stdio import stdio_client
 from pydantic import BaseModel, Field
 from typing import Type
-from langchain_mcp_adapters.client import MultiServerMCPClient
 import json
-import os
+from tools.util_az_mcp import azcli_command_tool
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -36,51 +35,28 @@ class AzCliTool(BaseTool):
         """The asynchronous method for the tool (optional)."""
 
         try:
-            server_params = StdioServerParameters(
-                command="npx",
-                args=["-y", "@azure/mcp@latest", "server", "start"],
-                env=None
-            )
-
-            async with stdio_client(server_params) as (read, write):
-                async with ClientSession(read, write) as session:
-                    await session.initialize()
-
-                    # Load the MCP tools into a list of LangChain BaseTool objects
-                    langchain_tools: list[BaseTool] = await load_mcp_tools(session)
-
-                    # List available tools
-                    # tools = await session.list_tools()
-                    # for tool in tools.tools: print(tool.name)
-
-                    # Format tools for Azure OpenAI
-                    tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
-
-                    if not tools or len(tools) != 1:
-                        return AzCliToolResult(
-                            success=False,
-                            az_commands=[],
-                            error="Error at Azure MCP tools, expected exactly one Azure CLI generation tool.")
+            
+            async with azcli_command_tool() as azcli_tool:
                     
+                result = await azcli_tool.ainvoke(input={
+                    "intent": prompt,
+                    "cli-type": "az"
+                })
 
-                    result = await tools[0].ainvoke(input={
-                        "intent": prompt,
-                        "cli-type": "az"
-                    })
+                azcli_result = AzCliToolResult()
 
-                    azcli_result = AzCliToolResult()
+                for r in result:
+                    td = json.loads(r['text'])
+                    azcli_result.success = True if td.get('message', '').lower() == 'success' else False
+                    command_data = td.get('results', '').get('command', '{}')
+                    command_data = json.loads(command_data)
 
-                    for r in result:
-                        td = json.loads(r['text'])
-                        azcli_result.success = True if td.get('message', '').lower() == 'success' else False
-                        command_data = td.get('results', '').get('command', '{}')
-                        command_data = json.loads(command_data)
+                    for cd in command_data.get('data', []):
+                        for cs in cd.get('commandSet', []):
+                            azcli_result.az_commands.append(cs.get('example', ''))
 
-                        for cd in command_data.get('data', []):
-                            for cs in cd.get('commandSet', []):
-                                azcli_result.az_commands.append(cs.get('example', ''))
-
-                    return azcli_result
+                return azcli_result
+            
         except Exception as e:
             azcli_result = AzCliToolResult(success=False, 
                                            az_commands=[],
