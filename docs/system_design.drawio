@@ -8,7 +8,7 @@
           <mxGeometry x="184" y="48" width="227" height="133" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-7" value="tools" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;strokeColor=#006600;" parent="1" vertex="1">
-          <mxGeometry x="625" y="270" width="178.75" height="433" as="geometry" />
+          <mxGeometry x="743" y="282" width="178.75" height="433" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-8" value="Environment" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=none;strokeColor=#CDA2BE;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" parent="1" vertex="1">
           <mxGeometry x="61" y="1141" width="856" height="133" as="geometry" />
@@ -28,13 +28,13 @@
           <mxGeometry x="325" y="666" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-3" value="azcli&lt;div&gt;(azure mcp)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" parent="1" vertex="1">
-          <mxGeometry x="648" y="433" width="90" height="45" as="geometry" />
+          <mxGeometry x="766" y="445" width="90" height="45" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-4" value="filesystem" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" parent="1" vertex="1">
-          <mxGeometry x="648" y="491" width="90" height="45" as="geometry" />
+          <mxGeometry x="766" y="503" width="90" height="45" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-5" value="azure monitor&lt;div&gt;kusto query&lt;/div&gt;&lt;div&gt;(azure mcp)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" parent="1" vertex="1">
-          <mxGeometry x="648" y="370" width="90" height="52" as="geometry" />
+          <mxGeometry x="766" y="382" width="90" height="52" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-6" value="bash shell&lt;div&gt;(azure authenticated)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#e1d5e7;strokeColor=none;" parent="1" vertex="1">
           <mxGeometry x="162.75" y="1152" width="131" height="64" as="geometry" />
@@ -52,7 +52,7 @@
           <mxGeometry x="405.75" y="1155" width="67.75" height="63" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-15" value="&lt;div&gt;web search&lt;/div&gt;(browser-use)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" parent="1" vertex="1">
-          <mxGeometry x="648" y="550" width="90" height="45" as="geometry" />
+          <mxGeometry x="766" y="562" width="90" height="45" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-17" value="environment&lt;div&gt;variables&lt;/div&gt;&lt;div&gt;(- service principal&lt;/div&gt;&lt;div&gt;- foundry api key)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#e1d5e7;strokeColor=none;" parent="1" vertex="1">
           <mxGeometry x="481.75" y="1154" width="125.25" height="63" as="geometry" />
@@ -131,67 +131,73 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="P8y7DsWdc9Lw9W1sFieL-9" value="AzCli Cmd&lt;div&gt;Error Handler&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;decisions:&lt;/div&gt;&lt;div&gt;- check resource exist&lt;/div&gt;&lt;div&gt;- use python code&lt;/div&gt;&lt;div&gt;- human-in-the-loop get hint or info&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
+        <mxCell id="P8y7DsWdc9Lw9W1sFieL-9" value="AzCli Cmd&lt;div&gt;Error Handler&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;if task fail, why fail...&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- check resource exist&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- use python code&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- human-in-the-loop get hint or info&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="292.5" y="894" width="196" height="146" as="geometry" />
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="XX4dXZArKa_XB44Elnlg-13">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="XX4dXZArKa_XB44Elnlg-13" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-1" value="Resource Name&lt;div&gt;Resolver&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-1" value="Resource Name&lt;div&gt;Resolver&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="391" y="345" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-2" value="human-in-the-loop" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" vertex="1" parent="1">
-          <mxGeometry x="646" y="293" width="90" height="52" as="geometry" />
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-2" value="human-in-the-loop" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" parent="1" vertex="1">
+          <mxGeometry x="764" y="305" width="90" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-3" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="MHRkh3GcBTEt-eYg6Qn0-2">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-3" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="MHRkh3GcBTEt-eYg6Qn0-2" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="578" y="534" as="sourcePoint" />
             <mxPoint x="756" y="494" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-4" value="task-step" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="MHRkh3GcBTEt-eYg6Qn0-3">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-4" value="either get user input&lt;div&gt;or&lt;/div&gt;&lt;div&gt;llm-mock name&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="MHRkh3GcBTEt-eYg6Qn0-3" vertex="1" connectable="0">
           <mxGeometry x="-0.2352" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-8" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="P8y7DsWdc9Lw9W1sFieL-1">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-8" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-1" target="P8y7DsWdc9Lw9W1sFieL-1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="325" y="466" as="sourcePoint" />
             <mxPoint x="375" y="416" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-9" value="task-steps" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="MHRkh3GcBTEt-eYg6Qn0-8">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-9" value="task-steps" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="MHRkh3GcBTEt-eYg6Qn0-8" vertex="1" connectable="0">
           <mxGeometry x="-0.1268" y="4" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-10" value="if azcli fails" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-10" value="if azcli fails" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="356" y="779" width="55" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-11" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="XX4dXZArKa_XB44Elnlg-2" target="MHRkh3GcBTEt-eYg6Qn0-10">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-11" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="XX4dXZArKa_XB44Elnlg-2" target="MHRkh3GcBTEt-eYg6Qn0-10" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="550" y="886" as="sourcePoint" />
             <mxPoint x="730" y="677" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-12" value="task-step" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="MHRkh3GcBTEt-eYg6Qn0-11">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-12" value="task-step" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="MHRkh3GcBTEt-eYg6Qn0-11" vertex="1" connectable="0">
           <mxGeometry x="-0.2352" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-13" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.471;entryY=0.014;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryPerimeter=0;" edge="1" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-10" target="P8y7DsWdc9Lw9W1sFieL-9">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-13" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.471;entryY=0.014;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryPerimeter=0;" parent="1" source="MHRkh3GcBTEt-eYg6Qn0-10" target="P8y7DsWdc9Lw9W1sFieL-9" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="556" y="842" as="sourcePoint" />
             <mxPoint x="736" y="633" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-14" value="task-step" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="MHRkh3GcBTEt-eYg6Qn0-13">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-14" value="task-step" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="MHRkh3GcBTEt-eYg6Qn0-13" vertex="1" connectable="0">
           <mxGeometry x="-0.2352" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-15" value="smolagents&lt;div&gt;code-exec-sandbox&lt;/div&gt;&lt;div&gt;- matplotlib&lt;/div&gt;&lt;div&gt;- seaborn&lt;/div&gt;&lt;div&gt;- pandas&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#e1d5e7;strokeColor=none;" vertex="1" parent="1">
+        <mxCell id="MHRkh3GcBTEt-eYg6Qn0-15" value="smolagents&lt;div&gt;code-exec-sandbox&lt;/div&gt;&lt;div&gt;- matplotlib&lt;/div&gt;&lt;div&gt;- seaborn&lt;/div&gt;&lt;div&gt;- pandas&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#e1d5e7;strokeColor=none;" parent="1" vertex="1">
           <mxGeometry x="691" y="1154" width="119" height="81" as="geometry" />
+        </mxCell>
+        <mxCell id="eJEC5NrAKxjZ3U5yCbzD-4" value="&lt;div&gt;azure documentation&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#d5e8d4;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="769" y="623" width="90" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="eJEC5NrAKxjZ3U5yCbzD-5" value="a task is supported by tools:&lt;div&gt;&amp;nbsp;- azcli&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;if fail - analyze why fail&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="113.5" y="935" width="281" height="57" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

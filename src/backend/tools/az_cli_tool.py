@@ -1,13 +1,11 @@
 from langchain_core.tools import tool, Tool, BaseTool
-from mcp import ClientSession, StdioServerParameters, types
-from langchain_mcp_adapters.tools import load_mcp_tools
-from mcp.client.stdio import stdio_client
+# from mcp import ClientSession, StdioServerParameters, types
+# from langchain_mcp_adapters.tools import load_mcp_tools
+# from mcp.client.stdio import stdio_client
 from pydantic import BaseModel, Field
 from typing import Type
 import json
-from tools.util_az_mcp import azcli_command_tool
-from dotenv import load_dotenv
-load_dotenv()
+from tools.util_az_mcp import az_cli_command_tool
 
 class AzCliToolSchema(BaseModel):
     prompt: str = Field(description="'The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.'")
@@ -36,7 +34,7 @@ class AzCliTool(BaseTool):
 
         try:
             
-            async with azcli_command_tool() as azcli_tool:
+            async with az_cli_command_tool() as azcli_tool:
                     
                 result = await azcli_tool.ainvoke(input={
                     "intent": prompt,

@@ -1,5 +1,5 @@
-from tools.azshell import AzShell, AzShellResult
-from tools.azcli_tool import AzCliTool, AzCliToolResult
+from tools.az_shell import AzShell, AzShellResult
+from tools.az_cli_tool import AzCliTool, AzCliToolResult
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -7,18 +7,20 @@ load_dotenv()
 if __name__ == "__main__":
     import asyncio
 
-    prompt_1 = """
+    azcli_prompt_1 = """
             create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
             Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
              """
     
-    prompt_2 = "create a Storage account with name 'strgwodsissd' in resource group 'rg-common'. Also create private endpoint for this storage. Disable public network access.~"
+    azcli_prompt_2 = "create a Storage account with name 'strgwodsissd' in resource group 'rg-common'. Also create private endpoint for this storage. Disable public network access.~"
+
+    az_doc_prompt_1 = "what is the kusto query to get top 10 CPU consuming queries in last 1 hour for VM name vm1 in resource group rg1?"
 
     async def main():
         
         azcli_tool_instance = AzCliTool()
         result: AzCliToolResult = await azcli_tool_instance.ainvoke(
-            {'prompt': prompt_2}
+            {'prompt': azcli_prompt_2}
         )
 
         if result.success:
