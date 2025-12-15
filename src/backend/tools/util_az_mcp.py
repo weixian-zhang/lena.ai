@@ -12,19 +12,18 @@ server_params = StdioServerParameters(
 )
 
 @asynccontextmanager
-async def azcli_command_tool() -> AsyncGenerator[BaseTool, None]:
+async def az_cli_command_tool() -> AsyncGenerator[BaseTool, None]:
     """
     Context manager that provides the Azure CLI command generation tool.
     
     Usage:
-        async with azcli_command_tool() as tool:
+        async with az_cli_command_tool() as tool:
             result = await tool.ainvoke({"intent": "list all VMs"})
     
     Yields:
         BaseTool: The Azure CLI command generation tool
     """
     
-
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
@@ -39,5 +38,34 @@ async def azcli_command_tool() -> AsyncGenerator[BaseTool, None]:
             assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
 
             yield tools[0]
+
+
+@asynccontextmanager
+async def az_doc_tool() -> AsyncGenerator[BaseTool, None]:
+    """
+    Context manager that provides the Azure documentation
+    
+    Usage:
+        async with azcli_command_tool() as tool:
+            result = await tool.ainvoke({"intent": "list all VMs"})
+    
+    Yields:
+        BaseTool: The Azure CLI command generation tool
+    """
+    
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+
+            # Load the MCP tools into a list of LangChain BaseTool objects
+            langchain_tools: list[BaseTool] = await load_mcp_tools(session)
+
+            # Format tools for Azure OpenAI
+            tools = [tool for tool in langchain_tools if tool.name == "documentation"]
+
+            assert tools, "Error at Azure MCP tools, no Azure documentation tool found."
+            assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure documentation tool."
+
+            yield tools[0]
+
             
-            # Cleanup happens automatically when exiting the context managers
