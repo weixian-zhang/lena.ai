@@ -13,7 +13,7 @@ if __name__ == "__main__":
             Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
              """
     
-    prompt_2 = "update Storage account with name 'strgcwhd', set Allow storage account key access to true."
+    prompt_2 = "create a Storage account with name 'strgwodsissd' in resource group 'rg-common'. Also create private endpoint for this storage. Disable public network access.~"
 
     async def main():
         
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
             for cmd in result.az_commands:
                 
-                shell_result: AzShellResult = await shell.run(cmd, timeout=2)
+                shell_result: AzShellResult = await shell.run(cmd, timeout=5)
 
                 if shell_result.success:
                     print(f"Command output:\n{shell_result.stdout}")

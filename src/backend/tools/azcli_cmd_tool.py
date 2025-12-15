@@ -22,10 +22,9 @@ class AzCliTool(BaseTool):
     """
     A class to generate Azure CLI commands for managing resources.
     """
-    name: str = "extension_cli_generate"
-    description: str = "'This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.'"
+    name: str = "azure_cli_command_generator"
+    description: str = "'This tool can generate Azure CLI commands to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.'"
     args_schema: Type[BaseModel] = AzCliToolSchema
-    azcli_tool: Tool = Field(default=None, description="The Azure CLI tool loaded from MCP session.")
     
 
     def _run(self, prompt: str) -> AzCliToolResult:
@@ -86,7 +85,7 @@ class AzCliTool(BaseTool):
             azcli_result = AzCliToolResult(success=False, 
                                            az_commands=[],
                                            error=str(e))
-            # raise Exception(f"Error generating Azure CLI command: {e}") from e
+
         
 
     def _add_event_internal(self, summary, start, end):
@@ -116,81 +115,6 @@ if __name__ == "__main__":
         print(result)
 
     asyncio.run(main())
-
-
-    # async def _load_azure_mcp_azcli_tool(self) -> Tool:
-    #     server_params = StdioServerParameters(
-    #         command="npx",
-    #         args=["-y", "@azure/mcp@latest", "server", "start"],
-    #         env=None
-    #     )
-
-    #     async with stdio_client(server_params) as (read, write):
-    #         async with ClientSession(read, write) as session:
-    #             await session.initialize()
-
-    #             # Load the MCP tools into a list of LangChain BaseTool objects
-    #             langchain_tools: list[BaseTool] = await load_mcp_tools(session)
-
-    #             langchain_tools = [tool for tool in langchain_tools if tool.name == "extension_cli_generate"]
-
-    #             result = await langchain_tools[0].ainvoke(input={
-    #                 "intent": """
-    #                 create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
-    #                 Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
-    #                 """,
-    #                 "cli-type": "az"
-    #             })
-
-    #             az_cmds = []
-
-    #             for r in result:
-
-    #                 az_cmds.append(json.loads(r['text']))
-
-    #             pass
-
-
-        # mcp_config = {
-        #     "azure_mcp": {
-        #         "command": "npx",
-        #         "args": [
-        #             "-y", # Automatically install the package if not found
-        #             "@azure/mcp@latest"
-        #             # Add any other required arguments for your specific server
-        #         ],
-        #         "transport": "stdio" # Use standard input/output for local process communication
-        #     }
-        # }
-
-        # 2. Initialize the MultiServerMCPClient
-        # The client manages the server lifecycle (starts it as a subprocess)
-        # client = MultiServerMCPClient(connections=mcp_config)
-
-        # async with client.session("azure_mcp") as session:
-
-        #     langchain_tools: list[BaseTool] = await load_mcp_tools(session)
-
-        #     assert langchain_tools is not None, "No tools found from MCP session."
-
-        #     tools = [tool for tool in tools if tool.name == "extension_cli_generate"]
-            
-        #     assert len(tools) == 1, "Expected exactly one Azure CLI generation tool."
-
-        #     return tools[0]
-
-    # @tool
-    # def generate_execute_azure_cli_command(self, prompt: str) -> dict:
-    #     """
-    #     This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.
-
-    #     :param prompt: a prompt to describe Azure operation to be performed and its parameters preferably. The Azure CLI command will be genrated internally for example: az vm create --resource-group myResourceGroup --name myVM --image UbuntuLTS --size Standard_DS1_v2
-    #     :return: dictionary of Azure CLI command execution result
-    #     """
-
-    #     cmd = self.azcli_tool.invoke({"intent": prompt})
-    #     return {}
-    
 
 
 
