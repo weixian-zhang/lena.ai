@@ -19,4 +19,5 @@ seaborn
 (all extensions)[https://learn.microsoft.com/en-us/cli/azure/azure-cli-extensions-list?view=azure-cli-latest]
 azure cli
 az extension add --name resource-graph
+az extension add log-analytics.
 

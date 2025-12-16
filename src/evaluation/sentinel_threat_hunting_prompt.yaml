@@ -1,0 +1,10 @@
+test_cases:
+  - category: resource_search
+    name: search_resource_group
+    prompt:
+      |
+      Analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity. It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.
+
+
+
+

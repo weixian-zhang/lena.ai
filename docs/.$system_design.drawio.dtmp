@@ -145,7 +145,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="P8y7DsWdc9Lw9W1sFieL-9" value="Task-Fail Reflection&lt;div&gt;Agent&lt;br&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;if task fail, why fail...&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- check resource exist&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- use python code&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- human-in-the-loop get hint or info&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
+        <mxCell id="P8y7DsWdc9Lw9W1sFieL-9" value="Task-Fail Reflection&lt;div&gt;Agent&lt;br&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;if task fail, why fail...&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- error message&lt;br&gt;- check resource exist&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- use python code&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;- human-in-the-loop get hint or info&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="292.5" y="894" width="196" height="146" as="geometry" />
         </mxCell>
         <mxCell id="MHRkh3GcBTEt-eYg6Qn0-1" value="Reflection&lt;div&gt;Agent&lt;/div&gt;&lt;div&gt;- cmd missing param&lt;/div&gt;&lt;div&gt;- cmd not supported, web search or gen python scripting&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
