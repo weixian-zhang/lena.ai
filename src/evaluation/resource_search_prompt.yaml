@@ -1,0 +1,6 @@
+test_cases:
+  - category: resource_search
+    name: search_resource_group
+    prompt:
+      |
+      locate VNet "vnet-test" and list all subnets

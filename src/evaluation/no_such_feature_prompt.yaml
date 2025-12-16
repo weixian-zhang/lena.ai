@@ -1,0 +1,6 @@
+test_cases:
+  - category: no_such_feature
+    name: stop_virutal_network
+    prompt:
+      |
+      locate VNet "vnet-test" in resource group "rg-test" and stop it.
