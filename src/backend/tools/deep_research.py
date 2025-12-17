@@ -11,11 +11,8 @@ from agent_framework import (
     ChatMessage,
     WorkflowOutputEvent
 )
-from dotenv import load_dotenv
-from langchain_openai import AzureChatOpenAI
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage, ToolMessage
-from langchain_mcp_adapters.tools import load_mcp_tools
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 class DeepResearchResult(BaseModel):
     result: str
