@@ -1,0 +1,11 @@
+test_cases:
+  - category: build_app_and_deploy
+    cases:
+    - case_id: 1
+      name: _build_fastapi_app_and_deploy
+      prompt: |
+        build a python FastAPI with 1 route /health and return simple Json response {"status": "ok"}.
+        Create a Dockerfile to containerize the application.
+        Then deploy the containerized application to Azure Container App named "my-fastapi-app" in resource group "my-resource-group".
+
+
