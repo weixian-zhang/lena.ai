@@ -1,11 +1,9 @@
-from tools.az_shell import AzShell, AzShellResult
-from tools.az_cli_tool import AzCliTool, AzCliToolResult
+from backend.az_shell import AzShell, AzShellResult
+from backend.tools.__bak_az_cli_tool import AzCliTool, AzCliToolResult
 
 from tools.tools_manager import ToolManager
 from dotenv import load_dotenv
 load_dotenv()
-
-
 
 
 
@@ -23,84 +21,16 @@ if __name__ == "__main__":
 
     resource_search_prompt_1 = "how many public IPs are there that are not associated with any resource"
 
-    sentinel_threat_hunting_prompt_1 = """
-generate Azure Kusto query to below requirement:
-Analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity. It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.
-"""
+    web_search_sentinel_kusto_query_prompt_1 = """
+    <task>
+    Azure kusto query for Azure Sentinel to: Analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity.
+    It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.
+    </task>
 
-    sentinel_threat_hunting_prompt_2 = """
-** tool scratchpad **:
-
-kusto query to analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity. It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.:
-
-// Define the time window for analysis
-let timeWindow = 21d;
-let trendWindow = 7d; // Define a shorter window for trend calculation, e.g., weekly trends
-
-SigninLogs
-| where TimeGenerated >= ago(timeWindow)
-// Focus on successful sign-ins as a baseline for normal user activity
-| where ResultType == "0"
-// Filter out sign-ins with empty location details
-| where isnotempty(LocationDetails.city) or isnotempty(LocationDetails.countryOrRegion)
-
-// Pre-process and summarize location diversity over daily intervals for each user and application
-| summarize DailyLocations = dcountif(strcat(LocationDetails.countryOrRegion, " - ", LocationDetails.city), isnotempty(LocationDetails.city) or isnotempty(LocationDetails.countryOrRegion)) by UserPrincipalName, AppDisplayName, bin(TimeGenerated, 1d)
-| order by UserPrincipalName, AppDisplayName, TimeGenerated asc
-
-// Generate a time series of location counts
-| summarize LocationCountSeries = make_list(DailyLocations, TimeGenerated) by UserPrincipalName, AppDisplayName
-
-// Use the trend_line operator to calculate the trend of location diversity
-// This is a conceptual step as KQL doesn't have a direct 'trend_line' operator like that.
-// The common approach for trend is using time series analysis (series_fit_line, series_fit_poly)
-// The following is a common KQL approach to find anomalous behavior using the built-in ML operators.
-// A simpler, more direct approach to the requirement is to use a windowed count and compare the recent count to an average.
-
-// Alternative approach: Calculate location variability in two separate windows (last 7 days vs previous 14 days)
-
-
-let recentLocations = SigninLogs
-| where TimeGenerated >= ago(trendWindow)
-| where ResultType == "0"
-| summarize RecentDistinctLocations = dcountif(strcat(LocationDetails.countryOrRegion, " - ", LocationDetails.city), isnotempty(LocationDetails.city) or isnotempty(LocationDetails.countryOrRegion)) by UserPrincipalName, AppDisplayName;
-
-let pastLocations = SigninLogs
-| where TimeGenerated >= ago(timeWindow) and TimeGenerated < ago(trendWindow)
-| where ResultType == "0"
-| summarize PastDistinctLocations = dcountif(strcat(LocationDetails.countryOrRegion, " - ", LocationDetails.city), isnotempty(LocationDetails.city) or isnotempty(LocationDetails.countryOrRegion)) by UserPrincipalName, AppDisplayName;
-
-// Join the two results to compare
-recentLocations
-| join kind=inner (pastLocations) on UserPrincipalName, AppDisplayName
-// Calculate the increase in location diversity
-| extend LocationIncrease = RecentDistinctLocations - PastDistinctLocations
-// Filter for users where the recent distinct locations are significantly more than past locations
-| where RecentDistinctLocations > 1.5 * PastDistinctLocations and RecentDistinctLocations > 2 // Ensure it's a significant jump and not just a jump from 0 to 1
-| order by LocationIncrease desc
-// Get the top 3 users
-| top 3 by LocationIncrease desc
-
-// Join back to the original logs to list the associated locations within the 21-day window
-| join kind=inner (
-    SigninLogs
-    | where TimeGenerated >= ago(timeWindow)
-    | where ResultType == "0"
-    | extend Location = strcat(LocationDetails.countryOrRegion, " - ", LocationDetails.city)
-    | where isnotempty(Location)
-    | distinct UserPrincipalName, AppDisplayName, Location
-) on UserPrincipalName, AppDisplayName
-
-| project UserPrincipalName, AppDisplayName, RecentDistinctLocations, PastDistinctLocations, LocationIncrease, Location
-| summarize LocationsList = make_set(Location) by UserPrincipalName, AppDisplayName, RecentDistinctLocations, PastDistinctLocations, LocationIncrease
-| project-away PastDistinctLocations, RecentDistinctLocations // Tidy up the final output
-| order by LocationIncrease desc
-
-
-** instructions **
-given data in <tool scratchpad> try format it to the best of your knowledge Azure CLI command without using tool.
-!output only the command and nothing else in format for example: az monitor query
-"""
+    <output>
+    Provide the final Azure Kusto query as the output. Only provide the Kusto query without any additional explanation or text.
+    </output>
+    """
 
     async def main():
         import json
@@ -119,7 +49,7 @@ given data in <tool scratchpad> try format it to the best of your knowledge Azur
         extension_cli_generate = tm.tools['extension_cli_generate'] #tm.tools['extension_cli_generate']
         llm = llm.bind_tools([extension_cli_generate])
 
-        ai_msg: AIMessage = llm.invoke(input=sentinel_threat_hunting_prompt_2)
+        ai_msg: AIMessage = llm.invoke(input=web_search_sentinel_kusto_query_prompt_1)
 
 
         if ai_msg.tool_calls:

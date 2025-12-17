@@ -1,4 +1,4 @@
-from tools.azure_mcp import AzureMcpTools, AzCliToolResult
+from tools.az_cli_tool import AzCliTool, AzCliToolResult
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Dict, Any
@@ -16,15 +16,15 @@ from typing import Dict, Any
 class ToolManager:
 
     def __init__(self):
-        self.azure_mcp_tools = AzureMcpTools()
+        self.az_cli_tool = AzCliTool()
     
     
     async def azcli_tool(self):
-        azcli_tool = await self.azure_mcp_tools.az_cli_tool()
+        azcli_tool = await self.az_cli_tool.get()
         return azcli_tool
 
     
     async def ainvoke_azcli_tool(self, prompt: str) -> AzCliToolResult:
-        result: AzCliToolResult = await self.azure_mcp_tools.ainvoke_az_cli_tool(prompt)
+        result: AzCliToolResult = await self.az_cli_tool.ainvoke(prompt)
         return result
 

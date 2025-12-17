@@ -1,97 +1,174 @@
-# from langchain_core.tools import tool, Tool, BaseTool
-# # from mcp import ClientSession, StdioServerParameters, types
-# # from langchain_mcp_adapters.tools import load_mcp_tools
-# # from mcp.client.stdio import stdio_client
-# from pydantic import BaseModel, Field
-# from typing import Type
-# import json
-# from tools.azure_mcp import az_cli_command_tool
+from contextlib import asynccontextmanager
+import json
+from typing import AsyncGenerator, Any
+from langchain.tools import BaseTool
+from langchain_mcp_adapters.tools import load_mcp_tools
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from pydantic import BaseModel, Field
 
 
-# class AzCliToolSchema(BaseModel):
-#     prompt: str = Field(description="'The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.'")
+class AzCliToolResult(BaseModel):
+    prompt: str = Field(default='', description="'The user intent of the task to be solved by using the CLI tool.'")
+    success: bool = Field(default=False, description="'Indicates whether the Azure CLI command was generated successfully.'")
+    commands: list[str] = Field(default=[], description="'The list of generated Azure CLI command(s).'")
+    error: str = Field(default='', description="'Error message if the command generation failed.'")
 
+class AzCliTool:
 
-# class AzCliToolResult(BaseModel):
-#     prompt: str = Field(default='', description="'The user intent of the task to be solved by using the CLI tool.'")
-#     success: bool = Field(default=False, description="'Indicates whether the Azure CLI command was generated successfully.'")
-#     az_commands: list[str] = Field(default=[], description="'The generated Azure CLI command as a string.'")
-#     error: str = Field(default='', description="'Error message if the command generation failed.'")
+    def __init__(self):
+        self.az_cli_tool_name = "extension_cli_generate"
+        self.server_params = StdioServerParameters(
+                command="npx",
+                args=["-y", "@azure/mcp@latest", "server", "start"],
+                env=None
+        )
 
-# class AzCliTool(BaseTool):
-#     """
-#     A class to generate Azure CLI commands for managing resources.
-#     """
-#     name: str = "azure_cli_command_generator"
-#     description: str = "'This tool can generate Azure CLI commands to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.'"
-#     args_schema: Type[BaseModel] = AzCliToolSchema
+    async def get(self) -> AsyncGenerator[BaseTool, None]:
+        """
+        Context manager that provides the Azure CLI command generation tool.
+        
+        Usage:
+            async with az_cli_tool() as tool:
+                result = await tool.ainvoke({"intent": "list all VMs"})
+        
+        returns:
+            BaseTool: The Azure CLI command generation tool
+        """
+        
+        async with self.az_mcp_session() as session:
+
+            # Load the MCP tools into a list of LangChain BaseTool objects
+            langchain_tools: list[BaseTool] = await load_mcp_tools(session)
+
+            # Format tools for Azure OpenAI
+            tools = [tool for tool in langchain_tools if tool.name == self.az_cli_tool_name]
+
+            assert tools, "Error at Azure MCP tools, no Azure CLI generation tool found."
+            assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
+
+            return tools[0]
+        
     
+    async def ainvoke(self, prompt: str) -> AsyncGenerator[BaseTool, None]:
+        """
+        Context manager that provides the Azure CLI command generation tool.
+        
+        Usage:
+            async with az_cli_tool() as tool:
+                result = await tool.ainvoke({"intent": "list all VMs"})
+        
+        Yields:
+            BaseTool: The Azure CLI command generation tool
+        """
+        
+        async with self.az_mcp_session() as session:
 
-#     def _run(self, prompt: str) -> AzCliToolResult:
-#         """The synchronous method that the agent will call."""
-#         # This is where your custom logic or API call goes
-#         raise NotImplementedError("Synchronous execution is not implemented. Please use the asynchronous method '_arun'.")
+            # Load the MCP tools into a list of LangChain BaseTool objects
+            langchain_tools: list[BaseTool] = await load_mcp_tools(session)
 
-#     async def _arun(self, prompt: str) -> AzCliToolResult:
-#         """The asynchronous method for the tool (optional)."""
+            # Format tools for Azure OpenAI
+            tools = [tool for tool in langchain_tools if tool.name == self.az_cli_tool_name]
 
-#         try:
+            assert tools, "Error at Azure MCP tools, no Azure CLI generation tool found."
+            assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
+
+            azcli = tools[0]
+
+            mcp_result = await azcli.ainvoke(input={
+                    "intent": prompt,
+                    "cli-type": "az"
+                })
+
+            result = AzCliToolResult(prompt=prompt)
             
-#             async with az_cli_command_tool() as azcli_tool:
-                    
-#                 result = await azcli_tool.ainvoke(input={
-#                     "intent": prompt,
-#                     "cli-type": "az"
-#                 })
+            for r in mcp_result:
+                td = json.loads(r['text'])
+                result.success = True if td.get('message', '').lower() == 'success' else False
+                command_data = td.get('results', '').get('command', '{}')
+                command_data = json.loads(command_data)
 
-#                 azcli_result = AzCliToolResult()
+                for cd in command_data.get('data', []):
+                    for cs in cd.get('commandSet', []):
+                        result.commands.append(cs.get('example', ''))
 
-#                 for r in result:
-#                     td = json.loads(r['text'])
-#                     azcli_result.success = True if td.get('message', '').lower() == 'success' else False
-#                     command_data = td.get('results', '').get('command', '{}')
-#                     command_data = json.loads(command_data)
-
-#                     for cd in command_data.get('data', []):
-#                         for cs in cd.get('commandSet', []):
-#                             azcli_result.az_commands.append(cs.get('example', ''))
-
-#                 return azcli_result
-            
-#         except Exception as e:
-#             azcli_result = AzCliToolResult(success=False, 
-#                                            az_commands=[],
-#                                            error=str(e))
+            return result
 
         
+        
+    @asynccontextmanager
+    async def az_mcp_session(self) -> AsyncGenerator[ClientSession, None]:
+        """
+        Context manager that provides an MCP ClientSession.
+        
+        Usage:
+            async with az_mcp_session() as session:
+                # Use the session here
+        
+        Yields:
+            ClientSession: The MCP ClientSession
+        """
+        
+        async with stdio_client(self.server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                yield session
 
-#     def _add_event_internal(self, summary, start, end):
-#         # Your internal business logic
-#         return f"Internal success for {summary}"
+
+# @asynccontextmanager
+# async def az_doc_tool() -> AsyncGenerator[BaseTool, None]:
+#     """
+#     Context manager that provides the Azure documentation
     
-#     async def _add_event_internal_async(self, summary, start, end):
-#         # Your internal async business logic
-#         return f"Async internal success for {summary}"
+#     Usage:
+#         async with azcli_command_tool() as tool:
+#             result = await tool.ainvoke({"intent": "list all VMs"})
     
-
-# if __name__ == "__main__":
-#     import asyncio
-
-#     prompt_1 = """
-#             create a virtual network named 'myVNet' in resource group 'myResourceGroup' with address prefix 172.15.0.0/16 and a subnet named 'mySubnet' with address prefix 172.15.1.0/24.
-#             Create a virtual machine named 'myVM' in resource group 'myResourceGroup' with UbuntuLTS image and Standard_DS1_v2 size and in virtual network myVNet.
-#              """
+#     Yields:
+#         BaseTool: The Azure CLI command generation tool
+#     """
     
-#     prompt_2 = "update Storage account with name 'strgcwhd', set Allow storage account key access to true."
+#     async with stdio_client(server_params) as (read, write):
+#         async with ClientSession(read, write) as session:
+#             await session.initialize()
 
-#     async def main():
-#         azcli_tool_instance = AzCliTool()
-#         result = await azcli_tool_instance.ainvoke(
-#             {'prompt': prompt_2}
-#         )
-#         print(result)
+#             # Load the MCP tools into a list of LangChain BaseTool objects
+#             langchain_tools: list[BaseTool] = await load_mcp_tools(session)
 
-#     asyncio.run(main())
+#             # Format tools for Azure OpenAI
+#             tools = [tool for tool in langchain_tools if tool.name == "documentation"]
+
+#             assert tools, "Error at Azure MCP tools, no Azure documentation tool found."
+#             assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure documentation tool."
+
+#             yield tools[0]
 
 
+# class AzureMcpTools:
 
+#     @staticmethod
+#     async def get_tools() -> dict[str, BaseTool]:
+#         """
+#         Get the Azure MCP tools as a dictionary of context managers.
+
+#         Returns:
+#             dict[str, Any]: A dictionary with tool names as keys and context managers as values.
+#         """
+
+#         async with stdio_client(server_params) as (read, write):
+#             async with ClientSession(read, write) as session:
+#                 await session.initialize()
+
+#                 # Load the MCP tools into a list of LangChain BaseTool objects
+#                 langchain_tools: list[BaseTool] = await load_mcp_tools(session)
+
+#                 # Format tools for Azure OpenAI
+#                 tools = [tool for tool in langchain_tools if tool.name in tool_in_use]
+
+#                 assert tools, "Error at Azure MCP tools, no Azure documentation tool found."
+#                 assert len(tools) == 3, "Error at Azure MCP tools, expected exactly one Azure documentation tool."
+
+#         return {k: v for tool in tools for k, v in {tool.name: tool}.items()}
+
+
+            
