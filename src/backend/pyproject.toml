@@ -20,15 +20,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+    "agent-framework>=1.0.0b251216",
     "azure-identity>=1.25.1",
-    "browser-use>=0.11.1",
     "dotenv-python>=0.0.1",
     "langchain>=1.1.3",
     "langchain-mcp-adapters>=0.2.1",
     "langchain-openai>=1.1.2",
     "langgraph>=1.0.4",
     "mcp>=1.24.0",
-    "tavily-python>=0.7.15",
 ]
 
 
