@@ -107,7 +107,7 @@
             <mxPoint x="-24" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="P8y7DsWdc9Lw9W1sFieL-4" value="Plan Executor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
+        <mxCell id="P8y7DsWdc9Lw9W1sFieL-4" value="Execution Plan Supervisor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="184.5" y="430" width="119.25" height="60" as="geometry" />
         </mxCell>
         <mxCell id="P8y7DsWdc9Lw9W1sFieL-7" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="P8y7DsWdc9Lw9W1sFieL-4" target="XX4dXZArKa_XB44Elnlg-2" edge="1">
