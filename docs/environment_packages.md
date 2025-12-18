@@ -14,6 +14,7 @@ python 3.13
 pandas
 matplotlib
 seaborn
+uv pip install "smolagents[openai]"
 
 ## Azure
 (all extensions)[https://learn.microsoft.com/en-us/cli/azure/azure-cli-extensions-list?view=azure-cli-latest]
