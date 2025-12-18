@@ -24,6 +24,14 @@ class DeepResearchTool(BaseTool):
     name: str = "deep_research_tool"
     description: str = "A tool that can access the Internet to conduct deep research on a given user query using web searches and information gathering."
     args_schema = DeepResearchInput
+    metadata: dict = {}
+    """The tool response format.
+
+    If `'content'` then the output of the tool is interpreted as the contents of a
+    `ToolMessage`. If `'content_and_artifact'` then the output is expected to be a
+    two-tuple corresponding to the `(content, artifact)` of a `ToolMessage`.
+    """
+    response_format = 'content'
 
 
     def _run(self, prompt: str) -> DeepResearchResult:
