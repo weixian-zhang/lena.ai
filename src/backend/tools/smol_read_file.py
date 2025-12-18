@@ -8,14 +8,13 @@ class ReadFileOutput(BaseModel):
     error: str = Field('', description="Error message if the file read failed")
 
 class SmolReadFileTool(Tool):
-    name = "read_file_from_local_file_system"
+    name = "read_file_tool"
     description = """
     Use this tool when you want to: read text content, code, or data from a file
     
     Important limitations:
     - Processes ONE file at a time only
     - Cannot perform batch operations on multiple files
-    
     
     """
 

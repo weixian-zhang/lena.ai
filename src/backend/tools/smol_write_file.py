@@ -7,7 +7,7 @@ class WriteFileOutput(BaseModel):
     error: str = Field('', description="Error message if the file write failed")
 
 class SmolWriteFileTool(Tool):
-    name = "write_file_to_local_file_system"
+    name = "write_file_tool"
     description = """
     Use this tool when you want to: Write content to a file on the local file system. Creates a new file or overwrites an existing file.
     

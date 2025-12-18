@@ -1,4 +1,4 @@
-## environment variables
+# environment variables
 for azure cli command execution
 * AZURE_TENANT_ID
 * AZURE_CLIENT_ID
@@ -9,14 +9,16 @@ for azure cli command execution
 
 NodeJS latest - Azure MCP Server to run npx
 
-## Python packages
+# Python packages
 python 3.13
 pandas
 matplotlib
 seaborn
+## smolagents CodeAgent
 uv pip install "smolagents[openai]"
+uv pip install ddgs
 
-## Azure
+# Azure
 (all extensions)[https://learn.microsoft.com/en-us/cli/azure/azure-cli-extensions-list?view=azure-cli-latest]
 azure cli
 az extension add --name resource-graph
