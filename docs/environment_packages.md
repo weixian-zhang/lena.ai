@@ -17,6 +17,7 @@ seaborn
 ## smolagents CodeAgent
 uv pip install "smolagents[openai]"
 uv pip install ddgs
+uv pip install matplotlib numpy pandas seaborn
 
 # Azure
 (all extensions)[https://learn.microsoft.com/en-us/cli/azure/azure-cli-extensions-list?view=azure-cli-latest]
