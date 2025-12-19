@@ -3,7 +3,7 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type, Any, List
 import os, sys
-from tools.smol_write_file import SmolWriteFileTool
+from file_system.smol_read_file import SmolReadFileTool
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -37,8 +37,6 @@ code_agent_prompt_templates = {
     # <tools>
     # 1. DuckDuckGoSearchTool: Use this tool to search the web for information that can help you generate accurate and effective code snippets.
     # 2. read_file_tool: Use this tool to read text content, code, or data from a file.
-    # 3. write_file_tool: Use this tool to write text content, code, or data to a file.
-    # 4. list_files_tool: Use this tool to list files in a directory.
     
     # """,
 
@@ -56,11 +54,10 @@ class CodeTool(BaseTool):
 
     name: str = "code_generator_executor"
     description:str = """
-    Generates and executes Python code. Returns execution output.
+    read the data CSV file from local file system, process the data, and generate insights or visualizations as needed.
 
     Important: 
     - This tool ONLY generates and runs code
-    - To save files → use write_file_tool
     - To read files → use read_file_tool  
     - To list directories → use list_files_tool
 
@@ -69,7 +66,6 @@ class CodeTool(BaseTool):
 
     args_schema: Type[BaseModel] = CodeToolInput
     response_format: Type[BaseModel] = CodeToolResult
-    
 
 
     def _run(self, prompt: str) -> str:
@@ -91,11 +87,42 @@ class CodeTool(BaseTool):
                 api_base=api_url,
                 api_key=api_key
             )
+            
+            authorized_imports = [
+                "os", "sys", "json", "csv", "math", "random", "datetime", "time", 
+                "re", "itertools", "functools", "collections", "pathlib", "io",
+                "base64", "hashlib", "uuid", "copy", "pickle", "statistics", "string",
+                "textwrap", "difflib", "yaml", "configparser", "gzip", 
+                "zipfile", "tarfile", "logging", "warnings", "array", "typing",
+                "dataclasses", "enum", "decimal", "stat", "queue", "seaborn", 
+                "numpy", "pandas", "unicodedata", "matplotlib", 'matplotlib.pyplot', 'matplotlib.figure', 
+                'matplotlib.axes', 'matplotlib.patches', 'matplotlib.lines', 'matplotlib.markers', 'matplotlib.path',
+                'matplotlib.transforms',
+                'matplotlib.animation',
+                'matplotlib.artist',
+                'matplotlib.collections',
+                'matplotlib.colorbar',
+                'matplotlib.colors',
+                'matplotlib.cm',
+                'matplotlib.contour',
+                'matplotlib.font_manager',
+                'matplotlib.text',
+                'matplotlib.image',
+                'matplotlib.dates',
+                'matplotlib.ticker',
+                'matplotlib.gridspec',
+                'matplotlib.style',
+                'matplotlib.widgets',
+                'matplotlib.legend',
+                'matplotlib.scale',
+                'matplotlib.table'
+            ] #'bs4'
 
             code_agent = CodeAgent(model=llm, 
                                    use_structured_outputs_internally=True,
-                                   prompt_templates= code_agent_prompt_templates,
-                                   tools=[DuckDuckGoSearchTool(), SmolWriteFileTool()])
+                                   additional_authorized_imports=authorized_imports,
+                                   executor_type="local",
+                                   tools=[DuckDuckGoSearchTool()])
 
             tool_calls = []
             messages = []
@@ -148,11 +175,11 @@ if __name__ == "__main__":
     code_tool = CodeTool()
     prompt_1 = "Write a Python function to calculate the factorial of number 5, run it and print result."
 
-    write_to_file_prompt_1 = f"""
-     build an app that does factorial for a given number.
-     Write the app to a file name 'factorial.py'. The root folder to write to is: {config.cwd_dir}""
-     Write the following content to a file named 'factorial.py':
+    read_file_prompt_1 = f"""
+     Accessa and analyze the data CSV file from local file system in this directory {config.agent_cwd}, process the data, 
+     and generate bar chart visualization of temperature over time.
+     Bar chart image can be save to local file system in this directory {config.agent_cwd} as 'temperature_chart.png'.
     """
     
-    result = asyncio.run(code_tool._arun(prompt_1))
+    result = asyncio.run(code_tool._arun(read_file_prompt_1))
     print(result)
