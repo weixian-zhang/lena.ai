@@ -1,0 +1,10 @@
+test_cases:
+  - category: data_etl
+    cases:
+    -   case_id: 1
+        name: extract_data_from_db1_transform_load_to_db2
+        prompt:
+          |
+          database "db1" with columns: [...]
+          database "db2" with columns: [...]
+          query "db1" and load the data into database "db2".
