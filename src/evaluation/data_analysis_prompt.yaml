@@ -1,15 +1,16 @@
 test_cases:
   - category: data_analysis
-  -   case_id: 1
-      name: blob_download_and_analyze
-      prompt:
-        |
-        download CSV file from storage account "strgcwhd" and analyze the data. What is the min and max value.
-  -   case_id: 2
-      name: sentinel_signin_logs_bar_chart
-      prompt:
-        |
-        In Azure Sentinel, analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity.
-        It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.
-        Plot the data in a bar chart.
+    cases:
+    -   case_id: 1
+        name: blob_download_and_analyze
+        prompt:
+          |
+          download CSV file from storage account "strgcwhd" and analyze the data. What is the min and max value.
+    -   case_id: 2
+        name: sentinel_signin_logs_bar_chart
+        prompt:
+          |
+          In Azure Sentinel, analyze trend analysis of Entra ID sign-in logs to detect unusual location changes for users across applications by computing trend lines of location diversity.
+          It highlights the top three accounts with the steepest increase in location variability and lists their associated locations within 21-day windows.
+          Plot the data in a bar chart.
 

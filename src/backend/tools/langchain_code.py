@@ -21,12 +21,15 @@ class CodeAgentToolCall(BaseModel):
     name: str = Field(..., description="name of tool")
     arg: str = Field(..., description="generated code snippet to execute")
 
+class CodeAgentOutput(BaseModel):
+    success: bool = Field(..., description="Indicates whether the code generation and execution was successful.")
+    output: str = Field(..., description="The final output from the code execution.")
+    error: str = Field(..., description="Error message if the code generation or execution failed.")
+
 class CodeToolResult(BaseModel):
-    success: bool = Field(default=False, description="Indicates whether the code generation and execution was successful.")
-    output: Any = Field(default=None, description="The final output from the code execution.")
+    output: CodeAgentOutput = Field(default=None, description="The final output from the code execution.")
     messages: List = Field(default=[], description="The messages exchanged during the code generation and execution process.")
     tool_calls: List = Field(default=[], description="all tool calls made during code generation and execution.")
-    error: str = Field(default='', description="Error message if the code generation or execution failed.")
 
 code_agent_prompt_templates = {
     # "system_prompt": """
@@ -53,15 +56,24 @@ class CodeTool(BaseTool):
     """
 
     name: str = "code_generator_executor"
-    description:str = """
-    read the data CSV file from local file system, process the data, and generate insights or visualizations as needed.
+    description: str = """
+    Generates and executes Python code to solve tasks. This is your primary tool for taking action through code.
 
-    Important: 
-    - This tool ONLY generates and runs code
-    - To read files → use read_file_tool  
-    - To list directories → use list_files_tool
+    Capabilities:
+    - Write and run Python code for any computational task
+    - Read and write files on the local file system
+    - Use pandas, numpy, matplotlib, seaborn for data analysis and visualization
+    - Perform calculations, data transformations, file operations, and automation
+    - Generate charts, reports, and save outputs to disk
 
-    Use for data processing, calculations, transformations, and automation tasks.
+    Use this tool when you need to:
+    - Process or analyze data files (CSV, JSON, etc.)
+    - Create visualizations or charts
+    - Perform mathematical calculations or data transformations
+    - Read/write/manipulate files
+    - Execute any task that requires Python code
+
+    Python code is the primary action mechanism - use this tool to directly solve problems by writing and executing code.
     """
 
     args_schema: Type[BaseModel] = CodeToolInput
@@ -118,6 +130,22 @@ class CodeTool(BaseTool):
                 'matplotlib.table'
             ] #'bs4'
 
+            structuered_output_prompt = """
+            <output>
+            You must provide the final output in <JSON format> as below.
+            
+            * Only at final thought and observation with no alternate solution and if error occurs , provide help technical error message to support debugging.
+            * If is not final thought and observation and has alternate solution to try, do not provide error message.
+
+            <JSON format>
+            {{
+                'success': {{True or False}},
+                "output": {{description in string}},
+                "error": {{error message if any otherwise empty string}}
+            }}"""
+
+            prompt += '\n\n' + structuered_output_prompt
+
             code_agent = CodeAgent(model=llm, 
                                    use_structured_outputs_internally=True,
                                    additional_authorized_imports=authorized_imports,
@@ -127,6 +155,7 @@ class CodeTool(BaseTool):
             tool_calls = []
             messages = []
             output: Any = None
+            error = None
 
             stream_generator = code_agent.run(prompt, stream=True)
             for response in stream_generator:
@@ -143,14 +172,13 @@ class CodeTool(BaseTool):
                 if self._has_output(response):
                     output = response.output
 
-                print(response)  # Iterate to the end to get the final response
+                # if self._error(response) and self._is_final_answer(response):
+                #     error = response.error
 
             return CodeToolResult(
-                success=True,
                 output=output,
                 messages=messages,
-                tool_calls=tool_calls,
-                error='')
+                tool_calls=tool_calls,)
         
         except Exception as e:
             return CodeToolResult(
@@ -158,11 +186,27 @@ class CodeTool(BaseTool):
                 output=None,
                 error=str(e))
         
+    def _get_python_interpretor_error(self, model: OpenAIServerModel, code_agent_messages: list[Any]) -> str:
+
+        assistant_messages = '\n'.join(m.content for m in code_agent_messages if m.role == 'assistant')
+
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Explain quantum mechanics in simple terms."}
+        ]
+
+        
     def _is_tool_call(self, obj: any) -> bool:
         return isinstance(obj, ToolCall)
     
     def _has_messages(self, obj: any) -> bool:
         return hasattr(obj, 'model_input_messages')
+    
+    def _is_final_answer(self, obj: any) -> bool:
+        return hasattr(obj, 'is_final_answer ') and obj.is_final_answer == True
+    
+    def _error(self, obj: any) -> bool:
+        return hasattr(obj, 'error')
     
     def _has_output(self, obj: any) -> bool:
         return hasattr(obj, 'output')
@@ -176,7 +220,7 @@ if __name__ == "__main__":
     prompt_1 = "Write a Python function to calculate the factorial of number 5, run it and print result."
 
     read_file_prompt_1 = f"""
-     Accessa and analyze the data CSV file from local file system in this directory {config.agent_cwd}, process the data, 
+     Accessa and analyze seattle_temperature.csv file in this directory {config.agent_cwd}, process the data, 
      and generate bar chart visualization of temperature over time.
      Bar chart image can be save to local file system in this directory {config.agent_cwd} as 'temperature_chart.png'.
     """
