@@ -1,4 +1,4 @@
-from tools.az_cli_tool import AzCliTool, AzCliToolResult
+from tools.az_cli import AzCliTool, AzCliToolResult
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Dict, Any

@@ -1,4 +1,4 @@
-from backend.az_shell import AzShell, AzShellResult
+from backend.tools.az_shell import AzShell, AzShellResult
 from backend.tools.__bak_az_cli_tool import AzCliTool, AzCliToolResult
 
 from tools.tools_manager import ToolManager
