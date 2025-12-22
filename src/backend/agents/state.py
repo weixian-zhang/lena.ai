@@ -20,12 +20,18 @@ class ToolResult(BaseModel):
     task_id: str = Field(default="", description="Unique identifier for the task")
     result: dict  | None = Field(default=None, description="The result of the action taken for the task")
 
-class ScratchPad(BaseModel):
+class PromptAzureMissingValues(BaseModel):
+    missing_values: dict = Field(default={}, description="The name of the missing field")
+    filled_values: dict = Field(default={}, description="The filled values for the missing fields")
+
+class Scratchpad(BaseModel):
     """
     - notes: a dict to hold general sensitive or non-sensitive info that does not tie to any task like SQL connection string, Azure resource ids, API keys, etc.
     - tool_results: a list of ToolResult to hold results from tool calls are specific to tasks
     """
-    notes: dict = Field(default={}, description="A dictionary to hold temporary notes or observations during task execution")
+    user_prompt: str = Field(default="", description="The original user prompt that initiated the execution")
+    prompt_azure_missing_values: PromptAzureMissingValues = Field(default=PromptAzureMissingValues(), description="A dictionary containing the missing information filled in by the user")
+    notes: dict = Field(default={}, description="A dict to hold general info or observations during workflow execution")
     tool_results: List[ToolResult] = Field(default=[], description="List of action results recorded in the scratch pad")
     def to_string(self) -> str:
         for ar in self.action_results:
@@ -38,5 +44,6 @@ class TaskPlan(BaseModel):
 
 
 class ExecutionState(BaseModel):
+    scratchpad: Scratchpad = Field(default=Scratchpad(), description="The scratchpad for temporary notes and observations")
     execution_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
     messages: Annotated[list[BaseMessage], Field(default=[], description="Conversation history"), add_messages]
