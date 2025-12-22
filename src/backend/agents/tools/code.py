@@ -3,7 +3,6 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type, Any, List
 import os, sys
-from file_system.smol_read_file import SmolReadFileTool
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -185,15 +184,6 @@ class CodeTool(BaseTool):
                 success=False,
                 output=None,
                 error=str(e))
-        
-    def _get_python_interpretor_error(self, model: OpenAIServerModel, code_agent_messages: list[Any]) -> str:
-
-        assistant_messages = '\n'.join(m.content for m in code_agent_messages if m.role == 'assistant')
-
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Explain quantum mechanics in simple terms."}
-        ]
 
         
     def _is_tool_call(self, obj: any) -> bool:
