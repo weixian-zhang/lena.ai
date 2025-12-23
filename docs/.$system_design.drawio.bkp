@@ -218,15 +218,15 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="DdvZVHQpjl_mCiO_yzXC-1" value="Value Resolver Agent" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
-          <mxGeometry x="199.75" y="-129.5" width="121" height="52" as="geometry" />
+          <mxGeometry x="199.75" y="-120.5" width="121" height="52" as="geometry" />
         </mxCell>
         <mxCell id="DdvZVHQpjl_mCiO_yzXC-4" value="user" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;align=center;fillColor=#00188D;shape=mxgraph.azure.user" parent="1" vertex="1">
-          <mxGeometry x="25.75" y="-120.5" width="25.38" height="27" as="geometry" />
+          <mxGeometry x="25.75" y="-111.5" width="25.38" height="27" as="geometry" />
         </mxCell>
         <mxCell id="DdvZVHQpjl_mCiO_yzXC-5" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.87;exitY=0.65;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="DdvZVHQpjl_mCiO_yzXC-4" target="DdvZVHQpjl_mCiO_yzXC-1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="89.70999999999998" y="-20.5" as="sourcePoint" />
-            <mxPoint x="139.70999999999998" y="-70.5" as="targetPoint" />
+            <mxPoint x="89.70999999999998" y="-11.5" as="sourcePoint" />
+            <mxPoint x="139.70999999999998" y="-61.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="DdvZVHQpjl_mCiO_yzXC-7" value="prompt" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="DdvZVHQpjl_mCiO_yzXC-5" vertex="1" connectable="0">
@@ -246,16 +246,16 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-1" value="need human&lt;div&gt;to fill missing Azure values&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="404.25" y="-149" width="103.5" height="91" as="geometry" />
+          <mxGeometry x="404.25" y="-140" width="103.5" height="91" as="geometry" />
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-2" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="DdvZVHQpjl_mCiO_yzXC-1" target="5LwllOtxZGR2aRwG6ZLg-1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="326.75" y="12.5" as="sourcePoint" />
-            <mxPoint x="376.75" y="-37.5" as="targetPoint" />
+            <mxPoint x="326.75" y="21.5" as="sourcePoint" />
+            <mxPoint x="376.75" y="-28.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-6" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="395" y="0.5" width="122" height="68" as="geometry" />
+          <mxGeometry x="395" y="9.5" width="122" height="68" as="geometry" />
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-3" value="human to fill values&lt;div&gt;(human-in-the-loop pattern)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="5LwllOtxZGR2aRwG6ZLg-6">
           <mxGeometry y="16" width="122" height="52" as="geometry" />
@@ -265,8 +265,8 @@
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-9" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="5LwllOtxZGR2aRwG6ZLg-1" target="5LwllOtxZGR2aRwG6ZLg-3">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="264.75" y="107.5" as="sourcePoint" />
-            <mxPoint x="401.25" y="159.5" as="targetPoint" />
+            <mxPoint x="264.75" y="116.5" as="sourcePoint" />
+            <mxPoint x="401.25" y="168.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="5LwllOtxZGR2aRwG6ZLg-10" value="prompt-with-azure-info" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="5LwllOtxZGR2aRwG6ZLg-9">

@@ -17,23 +17,27 @@ Review the user's prompt and identify missing Azure resource information require
 ** Important exceptions **
 - if user says "you decide", "your choice", or similar, consider it as no missing info and provide suitable default values.
 - If the prompt contains "search", "find", "list", or "query", missing information is acceptable
-- Read-only operations may not require all fields
+- If there is more than one resource with missing name, make sure the ** Output format ** <unique_resource_identifier> os unique.
 
 ** Your task **
 1. Analyze the user's prompt for the Azure operation intent
 2. Identify what information is missing for the operation
 3. Output ONLY the missing fields in JSON format
 
-Output format:
+** Output format **
 {
-    "<field_name>": "<description of what's needed>"
+    "<unique_resource_identifier>": "<description of what's needed>"
 }
 
 Examples:
-- "resource_group_name": "Name of the resource group"
-- "virtual_network_name": "Name of the virtual network"
-- "location": "Azure region (e.g., eastus, westus2)"
-- "subscription_id": "Azure subscription ID"
+{
+    "vm_name_linux_1": "Name of Linux virtual machine to create",
+    "vm_name_linux_2": "Name of Linux virtual machine to create",
+    "vm_name_windows_1": "Name of Windows virtual machine to create",
+    "resource_group_name": "Name of the resource group to use",
+    "location": "Azure region for the resource",}
+    "subscription_id": "Azure subscription ID to operate in"
+}
 
 If NO information is missing, return empty JSON: {}
 """

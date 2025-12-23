@@ -3,6 +3,15 @@ from typing import Literal, Annotated, List
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 import json
+from enum import Enum
+
+class Agents(Enum):
+    VALUE_RESOLVER_AGENT = "ValueResolverAgent"
+    TASK_PLANNER_AGENT = "TaskPlannerAgent"
+    TASK_REFLECTION_AGENT = "TaskReflectionAgent"
+    EXECUTION_PLAN_SUPERVISOR_AGENT = "ExecutionPlanSupervisorAgent"
+    TASK_EXECUTOR_AGENT = "TaskExecutorAgent"
+    TASK_ERROR_REFLECTION_AGENT = "TaskErrorReflectionAgent"
 
 class Task(BaseModel):
     task_id: str = Field(default="", description="Unique identifier for the task")
