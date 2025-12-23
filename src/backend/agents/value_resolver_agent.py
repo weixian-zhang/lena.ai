@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Base
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from prompt import missing_info_system_prompt
+from prompt import missing_azure_values_system_prompt, update_user_prompt_with_filled_values_system_prompt
 from state import ExecutionState
 from utils import Util
 import json
@@ -22,7 +22,7 @@ class ValueResolverAgent:
 
         chat_template = ChatPromptTemplate.from_messages(
             [
-                SystemMessage(content=missing_info_system_prompt),
+                SystemMessage(content=missing_azure_values_system_prompt),
                 HumanMessage(content=execution_state.scratchpad.user_prompt)
             ]   
         )
@@ -35,7 +35,7 @@ class ValueResolverAgent:
 
         if response.content.strip() != "{}":
             missing_values: dict[str, str] = json.loads(response.content.strip())
-            execution_state.scratchpad.prompt_azure_missing_values.missing_values = missing_values
+            execution_state.scratchpad.missing_azure_values_in_prompt.missing = missing_values
 
         return {
             'execution_state': execution_state,
@@ -45,7 +45,7 @@ class ValueResolverAgent:
 
     def check_with_human_on_missing_values(self, execution_state: ExecutionState) -> dict:
 
-        missing_values = execution_state.scratchpad.prompt_azure_missing_values.missing_values
+        missing_values = execution_state.scratchpad.missing_azure_values_in_prompt.missing
 
         if not missing_values:
             return {}
@@ -57,21 +57,58 @@ class ValueResolverAgent:
         filled_values = interrupt(guide_user_to_fill_values)
 
         if filled_values:
-            execution_state.scratchpad.prompt_azure_missing_values.filled_values = filled_values.split(',')
+            execution_state.scratchpad.missing_azure_values_in_prompt.filled = filled_values.split(',')
 
         return { 'execution_state': execution_state }
     
+
+    def update_prompt_with_filled_values(self, execution_state: ExecutionState) -> dict:
+
+        class RefinedPromptOutput(BaseModel):
+            resolved_prompt: str = Field(default="", description="The enriched user prompt with filled Azure resource values")
+        
+        llm : AzureChatOpenAI= Util.gpt_4o()
+        llm.with_structured_output(RefinedPromptOutput)
+
+        user_prompt = execution_state.scratchpad.original_prompt
+        missing_values = execution_state.scratchpad.missing_azure_values_in_prompt.missing
+        filled_values = execution_state.scratchpad.missing_azure_values_in_prompt.filled
+
+        messages = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content=update_user_prompt_with_filled_values_system_prompt.format(
+                        user_prompt=user_prompt,
+                        missing_values=missing_values,
+                        filled_values=filled_values
+                    )
+                ),
+                HumanMessage(content="update original prompt using the previously missing Azure values and filled Azure values.")
+            ]
+        ) | llm
+
+
+        output: RefinedPromptOutput = messages.invoke({})
+        resolved_prompt = output.resolved_prompt
+
+        execution_state.scratchpad.resolved_prompt = resolved_prompt
+
+        return {
+            'execution_state': execution_state,
+            'messages': [AIMessage(content=resolved_prompt)]
+        }
+    
     
     # conditional routing methods
-    def need_human_fill_missing_values(self, execution_state: ExecutionState) -> str:
-        missing_values = execution_state.scratchpad.prompt_azure_missing_values.missing_values
-        if not missing_values:
-            return 'no_need_human_fill_missing_values'
-        return 'need_human_fill_missing_values'
+    def need_human_to_fill_missing_values(self, execution_state: ExecutionState) -> str:
+        if not execution_state.scratchpad.missing_azure_values_in_prompt.missing:
+            return 'no_need_human_to_fill_missing_values'
+        return 'need_human_to_fill_missing_values'
+
 
     def are_azure_missings_resolved(self, execution_state: ExecutionState) -> bool:
-        missing_values = execution_state.scratchpad.prompt_azure_missing_values.missing_values
-        filled_values = execution_state.scratchpad.prompt_azure_missing_values.filled_values
+        missing_values = execution_state.scratchpad.missing_azure_values_in_prompt.missing
+        filled_values = execution_state.scratchpad.missing_azure_values_in_prompt.filled    
 
         if not missing_values:
             return True
