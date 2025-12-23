@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
   <diagram name="Page-1" id="FIoUPqbTfphzpsdLcEyU">
-    <mxGraphModel dx="2062" dy="1886" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1952" dy="1815" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -39,7 +39,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="XX4dXZArKa_XB44Elnlg-13" value="Task Planner&lt;div&gt;(generate task steps and azcli cmds for each step)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
+        <mxCell id="XX4dXZArKa_XB44Elnlg-13" value="Task Planner Agent&lt;div&gt;(generate task steps and azcli cmds for each step)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="396" y="207" width="121" height="70" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-14" value="chromium&lt;div&gt;browser&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#e1d5e7;strokeColor=none;" parent="1" vertex="1">
@@ -217,39 +217,76 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-1" value="Missing Info&lt;div&gt;Resolver&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
-          <mxGeometry x="396" y="73" width="121" height="70" as="geometry" />
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-1" value="Value Resolver Agent" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="199.75" y="-129.5" width="121" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-4" value="user" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.azure.user" vertex="1" parent="1">
-          <mxGeometry x="219" y="86" width="31.96" height="34" as="geometry" />
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-4" value="user" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;align=center;fillColor=#00188D;shape=mxgraph.azure.user" parent="1" vertex="1">
+          <mxGeometry x="25.75" y="-120.5" width="25.38" height="27" as="geometry" />
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-5" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.87;exitY=0.65;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="DdvZVHQpjl_mCiO_yzXC-4" target="DdvZVHQpjl_mCiO_yzXC-1">
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-5" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.87;exitY=0.65;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="DdvZVHQpjl_mCiO_yzXC-4" target="DdvZVHQpjl_mCiO_yzXC-1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="285.96" y="182" as="sourcePoint" />
-            <mxPoint x="335.96" y="132" as="targetPoint" />
+            <mxPoint x="89.70999999999998" y="-20.5" as="sourcePoint" />
+            <mxPoint x="139.70999999999998" y="-70.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-7" value="prompt" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="DdvZVHQpjl_mCiO_yzXC-5">
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-7" value="prompt" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="DdvZVHQpjl_mCiO_yzXC-5" vertex="1" connectable="0">
           <mxGeometry x="0.0376" y="3" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="DdvZVHQpjl_mCiO_yzXC-1" target="DdvZVHQpjl_mCiO_yzXC-4">
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-11" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="5LwllOtxZGR2aRwG6ZLg-3" target="XX4dXZArKa_XB44Elnlg-13" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="124" y="119" as="sourcePoint" />
+            <mxPoint x="260.5" y="171" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DdvZVHQpjl_mCiO_yzXC-12" value="updated user prompt&lt;div&gt;with filled Azure values&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="DdvZVHQpjl_mCiO_yzXC-11" vertex="1" connectable="0">
+          <mxGeometry x="0.0376" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-1" value="need human&lt;div&gt;to fill missing Azure values&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="404.25" y="-149" width="103.5" height="91" as="geometry" />
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-2" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="DdvZVHQpjl_mCiO_yzXC-1" target="5LwllOtxZGR2aRwG6ZLg-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="326.75" y="12.5" as="sourcePoint" />
+            <mxPoint x="376.75" y="-37.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-6" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="395" y="0.5" width="122" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-3" value="human to fill values&lt;div&gt;(human-in-the-loop pattern)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="5LwllOtxZGR2aRwG6ZLg-6">
+          <mxGeometry y="16" width="122" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-4" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.azure.user" vertex="1" parent="5LwllOtxZGR2aRwG6ZLg-6">
+          <mxGeometry x="106.96000000000004" width="15.04" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-9" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="5LwllOtxZGR2aRwG6ZLg-1" target="5LwllOtxZGR2aRwG6ZLg-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="264.75" y="107.5" as="sourcePoint" />
+            <mxPoint x="401.25" y="159.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-10" value="prompt-with-azure-info" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="5LwllOtxZGR2aRwG6ZLg-9">
+          <mxGeometry x="0.0376" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="5LwllOtxZGR2aRwG6ZLg-3" target="DdvZVHQpjl_mCiO_yzXC-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-10" value="human-in-the-info&lt;div&gt;missing resource group,&lt;/div&gt;&lt;div&gt;resource name, locaotion,&lt;/div&gt;&lt;div&gt;subscription&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="DdvZVHQpjl_mCiO_yzXC-8">
-          <mxGeometry x="0.0344" y="2" relative="1" as="geometry">
-            <mxPoint x="12" y="-30" as="offset" />
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-12" value="re-check if missing&lt;div&gt;values are resolved&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="5LwllOtxZGR2aRwG6ZLg-11">
+          <mxGeometry x="0.1275" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-11" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="DdvZVHQpjl_mCiO_yzXC-1" target="XX4dXZArKa_XB44Elnlg-13">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="378" y="104" as="sourcePoint" />
-            <mxPoint x="521" y="105" as="targetPoint" />
-          </mxGeometry>
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5LwllOtxZGR2aRwG6ZLg-3" target="DdvZVHQpjl_mCiO_yzXC-4">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="DdvZVHQpjl_mCiO_yzXC-12" value="prompt-with-azure-info" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="DdvZVHQpjl_mCiO_yzXC-11">
-          <mxGeometry x="0.0376" y="3" relative="1" as="geometry">
+        <mxCell id="5LwllOtxZGR2aRwG6ZLg-14" value="&lt;div&gt;missing resource group,&lt;/div&gt;&lt;div&gt;resource name, locaotion,&lt;/div&gt;&lt;div&gt;subscription, etc&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="5LwllOtxZGR2aRwG6ZLg-13">
+          <mxGeometry x="0.4079" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
