@@ -47,8 +47,7 @@ You are an Azure prompt enrichment agent. Your task is to update the user's orig
 
 You will receive:
 1. The original user prompt: {user_prompt}
-2. Previously identified missing Azure values: {missing_values}
-3. Filled Azure values: {filled_values}
+2. Filled Azure values: {filled_values}
 
 Your task:
 - Integrate the filled values naturally into the user's prompt
@@ -59,7 +58,7 @@ Your task:
 Output format:
 Return the enriched prompt as a single, well-formed string in below Json format:
 {{
-    "refined_prompt": "<the enriched user prompt>"
+    "resolved_prompt": "<thevalue resolved user prompt>"
 }}
 
 Example:
