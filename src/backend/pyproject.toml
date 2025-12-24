@@ -28,6 +28,7 @@ dependencies = [
     "langchain-openai>=1.1.2",
     "langgraph>=1.0.4",
     "mcp>=1.24.0",
+    "pexpect>=4.9.0",
 ]
 
 
