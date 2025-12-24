@@ -67,9 +67,15 @@ if __name__ == "__main__":
     workflow = AzureWorkflow()
     graph = workflow.build_graph()
 
+    prompt_1 = "Create an Azure VM with 4 CPUs and 16GB RAM in East US region."
+    prompt_2 = """
+    1. create a landing zone with 3 VNets, each VNet should have 1 subnets.
+    2. peer the 3 VNets together.
+    3. create 3 VMs one in each subnet, 2 Linux VMs and 1 Windows VM."""
+
     state = ExecutionState(
         scratchpad = Scratchpad(
-            original_prompt = "Create an Azure VM with 4 CPUs and 16GB RAM in East US region."
+            original_prompt = prompt_2
         )
     )
     

@@ -11,8 +11,7 @@ Review the user's prompt and identify missing Azure resource information require
 - Resource name(s)
 - Resource group name
 - Location/region
-- Subscription ID (if operating across subscriptions)
-- Resource-specific parameters (SKU, size, tier, etc.)
+- Subscription Name (if operating across subscriptions)
 
 ** Important exceptions **
 - if user says "you decide", "your choice", or similar, consider it as no missing info and provide suitable default values.
@@ -36,7 +35,7 @@ Examples:
     "vm_name_windows_1": "Name of Windows virtual machine to create",
     "resource_group_name": "Name of the resource group to use",
     "location": "Azure region for the resource",}
-    "subscription_id": "Azure subscription ID to operate in"
+    "subscription_name": "Azure subscription Name to operate in"
 }
 
 If NO information is missing, return empty JSON: {}

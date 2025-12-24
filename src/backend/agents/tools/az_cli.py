@@ -186,18 +186,24 @@ class AzCliTool(BaseTool):
 
 
 
-# if __name__ == "__main__":
-#     import asyncio
+if __name__ == "__main__":
+    import asyncio
+    from az_shell import AzShell
 
-#     async def main():
-#         az_cli_tool = AzCliTool()
+    async def main():
+        az_cli_tool = AzCliTool()
 
-#         result = await az_cli_tool.ainvoke({
-#             "prompt": "Create a new resource group named 'TestGroup' in the 'eastus' region."
-#         })
-#         print(result)
+        result: AzCliToolResult = await az_cli_tool.ainvoke({
+            "prompt": "list all VM sku in southeast asia region"
+        })
 
-#     asyncio.run(main())
+        result.commands[0]
+
+        az_shell = AzShell()
+        result = await az_shell.ainvoke(result.commands[0], timeout=1)
+        print(result)
+
+    asyncio.run(main())
 
 
 # @asynccontextmanager
