@@ -22,7 +22,7 @@ class AzureWorkflow:
         self.workflow = StateGraph(ExecutionState)
         self.workflow.add_node("check_for_missing_azure_values", self.value_resolver_agent.check_for_missing_azure_values)
         self.workflow.add_node("check_with_human_on_missing_values", self.value_resolver_agent.check_with_human_on_missing_values)
-        
+        self.workflow.add_node('update_prompt_with_filled_values', self.value_resolver_agent.update_prompt_with_filled_values)
         self.workflow.add_edge(START, "check_for_missing_azure_values")
         self.workflow.add_conditional_edges(
             "check_for_missing_azure_values", self.value_resolver_agent.need_human_to_fill_missing_values,
@@ -32,7 +32,8 @@ class AzureWorkflow:
              }
         )
         # after human fills in missing values, re-check for missing values
-        self.workflow.add_edge("check_with_human_on_missing_values", 'check_for_missing_azure_values')
+        self.workflow.add_edge("check_with_human_on_missing_values", 'update_prompt_with_filled_values')
+        self.workflow.add_edge('update_prompt_with_filled_values', 'check_for_missing_azure_values')
         self.workflow = self.workflow.compile(checkpointer=checkpointer)
 
         return self.workflow
@@ -44,7 +45,7 @@ class AzureWorkflow:
         return self.workflow.invoke(self.state)
     
 
-    def is_missing_values_for_human_input(self, result: dict) -> Tuple[bool, str]:
+    def is_missing_values_for_human_input(self, result: dict) -> Tuple[bool, dict[str,str]]:
         
         interrupt = result.get('__interrupt__', False)
         interrupt_key = 'value_resolver_agent_missing_values'
@@ -74,11 +75,18 @@ if __name__ == "__main__":
     
     result = graph.invoke(input=state, config=config)
 
-    yes, missing_values_prompt = workflow.is_missing_values_for_human_input(result)
+    yes, missing_values = workflow.is_missing_values_for_human_input(result)
     if yes:
-        filled_values = input(missing_values_prompt)
+
+        filled_values = missing_values.copy()
+
+        for k, v in missing_values.items():
+            k_input = input(f"Please provide value for '{k}': ")
+            filled_values[k] = k_input
+
+        state.scratchpad.missing_azure_values_in_prompt.filled = filled_values
         
-        result = graph.invoke(Command(resume=filled_values), config=config)
+        result = graph.invoke(Command(resume=filled_values, update=state), config=config)
 
         print(result)
     else:

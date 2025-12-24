@@ -20,10 +20,12 @@ class ValueResolverAgent:
 
         llm: AzureChatOpenAI = Util.gpt_4o()
 
+        user_prompt = execution_state.scratchpad.resolved_prompt or execution_state.scratchpad.original_prompt
+
         chat_template = ChatPromptTemplate.from_messages(
             [
                 SystemMessage(content=missing_azure_values_system_prompt),
-                HumanMessage(content=execution_state.scratchpad.original_prompt)
+                HumanMessage(content=user_prompt)
             ]   
         )
 
@@ -37,6 +39,9 @@ class ValueResolverAgent:
         if response.content.strip() != "{}":
             missing_values: dict[str, str] = json.loads(response.content.strip())
             execution_state.scratchpad.missing_azure_values_in_prompt.missing = missing_values
+        else:
+            execution_state.scratchpad.missing_azure_values_in_prompt.missing = {}
+            
 
         return {
             'execution_state': execution_state,
@@ -52,14 +57,15 @@ class ValueResolverAgent:
             return {}
 
 
-        guide_user_to_fill_values = f'please provide the missing values for these fields separated by commas: {", ".join(missing_values.keys())}'
+        #guide_user_to_fill_values = f'please provide the missing values for these fields separated by commas: {", ".join(missing_values.keys())}'
     
 
         # human-in-the-loop to fill in missing values
-        filled_values = interrupt({'value_resolver_agent_missing_values': guide_user_to_fill_values})
+        # assume client-side have updated State with filled values 
+        _filled_values = interrupt({'value_resolver_agent_missing_values': missing_values})
 
-        if filled_values:
-            execution_state.scratchpad.missing_azure_values_in_prompt.filled = filled_values.split(',')
+        # if filled_values:
+        #     execution_state.scratchpad.missing_azure_values_in_prompt.filled = filled_values.split(',')
 
         return { 'execution_state': execution_state }
     
@@ -70,10 +76,9 @@ class ValueResolverAgent:
             resolved_prompt: str = Field(default="", description="The enriched user prompt with filled Azure resource values")
         
         llm : AzureChatOpenAI= Util.gpt_4o()
-        llm.with_structured_output(RefinedPromptOutput)
+        llm = llm.with_structured_output(RefinedPromptOutput)
 
         user_prompt = execution_state.scratchpad.original_prompt
-        missing_values = execution_state.scratchpad.missing_azure_values_in_prompt.missing
         filled_values = execution_state.scratchpad.missing_azure_values_in_prompt.filled
 
         messages = ChatPromptTemplate.from_messages(
@@ -81,16 +86,18 @@ class ValueResolverAgent:
                 SystemMessage(
                     content=update_user_prompt_with_filled_values_system_prompt.format(
                         user_prompt=user_prompt,
-                        missing_values=missing_values,
                         filled_values=filled_values
                     )
                 ),
                 HumanMessage(content="update original prompt using the previously missing Azure values and filled Azure values.")
             ]
-        ) | llm
+        )
+
+        chain = messages | llm
 
 
-        output: RefinedPromptOutput = messages.invoke({})
+        output: RefinedPromptOutput = chain.invoke({})
+
         resolved_prompt = output.resolved_prompt
 
         execution_state.scratchpad.resolved_prompt = resolved_prompt
