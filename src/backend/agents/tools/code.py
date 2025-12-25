@@ -54,7 +54,7 @@ class CodeTool(BaseTool):
     This tool is a wrapper around SmolAgents CodeAgent to generate and execute code snippets based on a given prompt.
     """
 
-    name: str = "code_generator_executor"
+    name: str = "python_code_generator_executor"
     description: str = """
     Generates and executes Python code to solve tasks. This is your primary tool for taking action through code.
 

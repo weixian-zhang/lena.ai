@@ -107,16 +107,16 @@ class AzShell(BaseTool):
             # stdout, stderr = process.communicate(timeout=60)
 
             import pexpect
-            child = pexpect.spawn('bash') 
+            child = pexpect.spawn(az_login + '; echo __LOGIN_DONE__') 
 
             
     
             # Optional: Log the output to stdout for debugging
             child.logfile = sys.stdout.buffer
 
-            prompt = r'\$' 
+            # prompt = r'\$' 
 
-            child.sendline(az_login + '; echo __LOGIN_DONE__')
+            # child.sendline(az_login + '; echo __LOGIN_DONE__')
 
             child.expect('__LOGIN_DONE__')
 
