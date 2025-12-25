@@ -63,7 +63,7 @@ class AzShell(BaseTool):
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, command: str, timeout: Optional[int] = 1) -> str:
+    async def _arun(self, command: str, timeout: Optional[int] = 60) -> str:
         """Asynchronously generate Azure CLI command from the given prompt."""
         """
         Execute a command synchronously and return the output as a string.
@@ -84,81 +84,27 @@ class AzShell(BaseTool):
 
         try:
 
-            
-            
             # Azure authn with service principal
             client_id = os.getenv("AZURE_CLIENT_ID")
             client_secret = os.getenv("AZURE_CLIENT_SECRET")
             tenant_id = os.getenv("AZURE_TENANT_ID")
+            
             # subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
-            az_login = f"az login --service-principal -u {client_id} -p {client_secret} --tenant {tenant_id}"
+            az_login = f"az login --service-principal -u {client_id} -p {client_secret} --tenant {tenant_id} --output none"
 
+            command_to_run = az_login + ';' + command
 
             # Start an interactive bash shell
-            # process = subprocess.Popen(
-            #     az_login + ';' + command,
-            #     shell=True,
-            #     executable='/bin/bash',
-            #     stdout=subprocess.PIPE,
-            #     stderr=subprocess.PIPE,
-            #     text=True
-            # )
+            process = subprocess.Popen(
+                command_to_run,
+                shell=True,
+                executable='/bin/bash',
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
             
-            # stdout, stderr = process.communicate(timeout=60)
-
-            import pexpect
-            child = pexpect.spawn(az_login + '; echo __LOGIN_DONE__') 
-
-            
-    
-            # Optional: Log the output to stdout for debugging
-            child.logfile = sys.stdout.buffer
-
-            # prompt = r'\$' 
-
-            # child.sendline(az_login + '; echo __LOGIN_DONE__')
-
-            child.expect('__LOGIN_DONE__')
-
-
-            # --- Run Command 1: Change directory (cd) ---
-            # 'cd' doesn't usually produce output, but we still expect the next prompt
-            child.sendline(command + '; echo __CMD_DONE__')
-
-            child.expect('__CMD_DONE__')
-
-            before = child.before
-
-            pass
-            
-            
-
-            # import subprocess
-            # ret = subprocess.run(az_login + ';' + command, capture_output=True, shell=True)
-
-            # stdout = ret.stdout.decode()
-            # stderr = ret.stderr.decode()
-            # success = ret.returncode == 0
-
-            # process.stdin.write(f"{az_login}\n".encode())
-            # await process.stdin.drain()
-
-            # # success, stdout, err_while_get_stdout, stderr, err_while_get_stderr = await self._get_stdout_stderr(process, timeout)
-            # success, stdout, stderr = await self._get_stdout_stderr(process, timeout)
-
-            # if stderr:
-            #     return AzShellToolResult(
-            #         success=False,
-            #         stdout=stdout,
-            #         stderr=stderr
-            #     )
-            
-            # process.stdin.write(f"{command}\n".encode())
-            # await process.stdin.drain()
-
-
-            # # success, stdout, err_while_get_stdout, stderr, err_while_get_stderr = await self._get_stdout_stderr(process, timeout)
-            # success, stdout, stderr = await self._get_stdout_stderr(process, timeout)
+            stdout, stderr = process.communicate(timeout=timeout)
 
             shell_result = AzShellToolResult(
                 success=True if not stderr else False,
@@ -177,62 +123,61 @@ class AzShell(BaseTool):
                 )
 
 
-
-    async def _get_stdout_stderr(self, process: Process, timeout: float) -> Tuple[bool, str, str]:
-        """
-        Helper function to read stdout and stderr with timeout.
+    # async def _get_stdout_stderr(self, process: Process, timeout: float) -> Tuple[bool, str, str]:
+    #     """
+    #     Helper function to read stdout and stderr with timeout.
         
-        returns: is_success, stdout_str, stderr_str
-        """
+    #     returns: is_success, stdout_str, stderr_str
+    #     """
 
-        stdout = []
-        max_line = 100
-        current_line = 0
+    #     stdout = []
+    #     max_line = 100
+    #     current_line = 0
 
-        while True:
+    #     while True:
 
-            if current_line >= max_line:
-                break
+    #         if current_line >= max_line:
+    #             break
 
-            try:
-                line = await asyncio.wait_for(process.stdout.readline(), timeout=timeout)
-                if not line:  # EOF
-                    break
+    #         try:
+    #             line = await asyncio.wait_for(process.stdout.readline(), timeout=timeout)
+    #             if not line:  # EOF
+    #                 break
 
-                line_str = line.decode().strip()
-                stdout.append(line_str)
+    #             line_str = line.decode().strip()
+    #             stdout.append(line_str)
 
-                current_line += 1
-            except asyncio.TimeoutError:
-                break
+    #             current_line += 1
+    #         except asyncio.TimeoutError:
+    #             break
 
 
-        stderr = []
-        is_warning = False
-        current_line = 0
+    #     stderr = []
+    #     is_warning = False
+    #     current_line = 0
         
-        while True:
-            if current_line >= max_line:
-                break
+    #     while True:
+    #         if current_line >= max_line:
+    #             break
 
-            try:
-                line = await asyncio.wait_for(process.stderr.readline(), timeout=timeout)
-                line_str = line.decode().strip()
-                if not is_warning and '[Warning]' in line.decode():
-                    is_warning = True
-                stderr.append(line_str)
+    #         try:
+    #             line = await asyncio.wait_for(process.stderr.readline(), timeout=timeout)
+    #             line_str = line.decode().strip()
+    #             if not is_warning and '[Warning]' in line.decode():
+    #                 is_warning = True
+    #             stderr.append(line_str)
 
-                current_line += 1
-            except asyncio.TimeoutError:
-                break
-
-
-        success = True if not stderr else False
-        stdout = '\n'.join(stdout)
-        stderr = '\n'.join(stderr)
+    #             current_line += 1
+    #         except asyncio.TimeoutError:
+    #             break
 
 
-        return success, stdout, stderr
+    #     success = True if not stderr else False
+    #     stdout = '\n'.join(stdout)
+    #     stderr = '\n'.join(stderr)
+
+
+    #     return success, stdout, stderr
 
 
 if __name__ == "__main__":
@@ -241,9 +186,12 @@ if __name__ == "__main__":
     az_shell = AzShell()
 
     async def test_az_shell():
-        #command = "az account list  -o tsv"
-        command = "az vm list-skus --location southeastasia --output table"
-        result = await az_shell.ainvoke(command, timeout=5)
+        command_1 = "az account list  -o tsv"
+        command_2 = "az vm list-skus --location southeastasia --output table"
+        command_3 = "az vm list -g rg-common"
+
+        result = await az_shell.ainvoke(command_2, timeout=60)
+
         print("Success:", result.success)
         print("STDOUT:", result.stdout)
         print("STDERR:", result.stderr)

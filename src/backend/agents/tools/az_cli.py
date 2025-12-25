@@ -19,7 +19,7 @@ class AzCliToolResult(BaseModel):
     error: str = Field(default='', description="'Error message if the command generation failed.'")
 
 class AzCliTool(BaseTool):
-    name: str = "azure_cli"
+    name: str = "azure_cli_generate"
     description: str = """
     'This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user.
     This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.'

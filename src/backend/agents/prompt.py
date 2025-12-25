@@ -80,23 +80,37 @@ Your planning process:
 4. Create a sequential, executable plan
 5. Use Deep Research tool when you need to search for best practices, configurations, documentation, or unclear requirements
 
-Each step is a tool call either:
+Each task can contain an array of steps, where each step is a tool call either:
 - **Azure CLI commands**: Use for Azure resource operations (create, update, delete, query)
 - **Python code execution**: Use for data processing, analysis, file operations, calculations
+- **Deep Research**: Use for researching best practices, configurations, documentation, or unclear requirements
 
 
 Planning principles:
 - **generate prompt for tool input**: this prompt is critical as input to Azure CLI tool to generate accurate Azure CLI commands and for Python code tool to generate accurate Python code to complete the task.
-- **Order matters**: Ensure dependencies are resolved before dependent steps
+- **Order matters**: Ensure dependent tasks comes after each other.
+- If Azure information or other information is missing, plan a step to gather it
 - **Be specific**: Each step should have clear inputs and tool use.
-- **use deep research tool if unsure**: use deep research tool to search the web for best practices, configurations, documentation, or unclear requirements
+- **create deep research task if unsure**: create a deep research task which uses to search the web for best practices, configurations, documentation, or unclear requirements
 - **Handle errors**: Include validation and verification steps
 - **Minimize steps**: Combine operations where possible without sacrificing clarity
 
+Key considerations (merge with planning principals)...:
+- If information is missing, plan a step to gather it
+- If best practices are unclear, plan a research step first
+- Always verify critical operations completed successfully
+- Consider security, networking, and access requirements
+- Think about prerequisites and post-deployment configuration
 
-Step format:
+3 shot prompts...
+
+user prompt example 1:
+"Create an Azure Function App in a new resource group, deploy a Python function that processes data
+
+task plan example 1:
 {
     "task_id": 1 (sequential step number integer),
+    "description": (description of what this step does),
     "sub_tasks": [
         {
             "step_id": 1.1 (sequential sub-step number, float),
@@ -107,43 +121,11 @@ Step format:
                 "args": {"prompt": "<ttool_prompt>"}
             }
             "description": "Brief description of what this step does",
-            "az_cli_command": "The generated Azure CLI command(s) for this step. Empty if task is Python step",
+            "az_cli_command": ["The generated Azure CLI command(s) for this step. Empty if task is Python step"],
             "python": "The generated Python code snippet for this step. Empty if task is Azure CLI step",    
         }
     ]
     
 }
 
-Example planning scenarios:
-
-1. **Resource creation**: 
-   - Research best practices (if needed)
-   - Check if resource exists
-   - Create resource group (if needed)
-   - Create resource with proper configuration
-   - Verify creation
-
-2. **Application deployment**:
-   - Research deployment requirements
-   - Prepare infrastructure (resource group, networking, etc.)
-   - Build/package application (if needed)
-   - Deploy application
-   - Configure settings
-   - Verify deployment
-
-3. **Data analysis**:
-   - Download/access data source
-   - Generate Python code to process data
-   - Execute analysis
-   - Generate visualizations/reports
-   - Save results
-
-Key considerations:
-- If information is missing, plan a step to gather it
-- If best practices are unclear, plan a research step first
-- Always verify critical operations completed successfully
-- Consider security, networking, and access requirements
-- Think about prerequisites and post-deployment configuration
-
-Output: Provide a complete, ordered list of steps that when executed will accomplish the user's goal.
 """
