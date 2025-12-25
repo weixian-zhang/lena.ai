@@ -4,7 +4,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import interrupt, Command
 from langchain_core.messages import HumanMessage
 from state import ExecutionState, Scratchpad
-from value_resolver_agent import ValueResolverAgent
+from backend.agents.task_param_collector_agent import ValueResolverAgent
 from typing import Tuple
 
 class AzureWorkflow:
