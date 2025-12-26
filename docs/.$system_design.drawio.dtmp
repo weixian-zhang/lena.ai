@@ -5,7 +5,7 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="X53L6LhyNuh9a8P0aRdQ-2" value="task planning &amp;amp; collect missing params&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" vertex="1" parent="1">
-          <mxGeometry x="49" y="-210" width="801" height="234" as="geometry" />
+          <mxGeometry x="49" y="-210" width="636" height="234" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-7" value="tools" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;strokeColor=#006600;" parent="1" vertex="1">
           <mxGeometry x="743" y="261" width="122" height="391" as="geometry" />

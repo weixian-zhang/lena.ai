@@ -107,77 +107,7 @@ class AzCliTool(BaseTool):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 yield session
-    
 
-    # async def get(self) -> AsyncGenerator[BaseTool, None]:
-    #     """
-    #     Context manager that provides the Azure CLI command generation tool.
-        
-    #     Usage:
-    #         async with az_cli_tool() as tool:
-    #             result = await tool.ainvoke({"intent": "list all VMs"})
-        
-    #     returns:
-    #         BaseTool: The Azure CLI command generation tool
-    #     """
-        
-    #     async with self.az_mcp_session() as session:
-
-    #         # Load the MCP tools into a list of LangChain BaseTool objects
-    #         langchain_tools: list[BaseTool] = await load_mcp_tools(session)
-
-    #         # Format tools for Azure OpenAI
-    #         tools = [tool for tool in langchain_tools if tool.name == self.name]
-
-    #         assert tools, "Error at Azure MCP tools, no Azure CLI generation tool found."
-    #         assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
-
-    #         return tools[0]
-        
-    
-    # async def ainvoke(self, prompt: str) -> AsyncGenerator[BaseTool, None]:
-    #     """
-    #     Context manager that provides the Azure CLI command generation tool.
-        
-    #     Usage:
-    #         async with az_cli_tool() as tool:
-    #             result = await tool.ainvoke({"intent": "list all VMs"})
-        
-    #     Yields:
-    #         BaseTool: The Azure CLI command generation tool
-    #     """
-        
-    #     async with self.az_mcp_session() as session:
-
-    #         # Load the MCP tools into a list of LangChain BaseTool objects
-    #         langchain_tools: list[BaseTool] = await load_mcp_tools(session)
-
-    #         # Format tools for Azure OpenAI
-    #         tools = [tool for tool in langchain_tools if tool.name == self.name]
-
-    #         assert tools, "Error at Azure MCP tools, no Azure CLI generation tool found."
-    #         assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
-
-    #         azcli = tools[0]
-
-    #         mcp_result = await azcli.ainvoke(input={
-    #                 "intent": prompt,
-    #                 "cli-type": "az"
-    #             })
-
-    #         result = AzCliToolResult(prompt=prompt)
-            
-    #         for r in mcp_result:
-    #             td = json.loads(r['text'])
-    #             result.success = True if td.get('message', '').lower() == 'success' else False
-    #             command_data = td.get('results', '').get('command', '{}')
-    #             command_data = json.loads(command_data)
-
-    #             for cd in command_data.get('data', []):
-    #                 for cs in cd.get('commandSet', []):
-    #                     result.commands.append(cs.get('example', ''))
-
-    #         return result
 
 
 
@@ -189,7 +119,7 @@ if __name__ == "__main__":
         az_cli_tool = AzCliTool()
 
         result: AzCliToolResult = await az_cli_tool.ainvoke({
-            "prompt": "create a Windows VM"
+            "prompt": "create a new Function app named <function_app_name> in resource group <resource_group_name> with Docker container using existing Storage account name 'strgcwhd'"
         })
 
         result.commands[0]
