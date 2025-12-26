@@ -127,6 +127,7 @@ task plan example 1:
     "step": [
         {
             "step_id": 1.1 (sequential sub-step number, float),
+            "description": "Create a new resource group for the Function App",
             "task_type": "az_cli" | "python"
             "tool_prompt": a prompt to send to Azure CLI command tool or Python code tool in order for tool to generate Azure CLI command(s) or Python code snippet,
             "tool": {
