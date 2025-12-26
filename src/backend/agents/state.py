@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, TypeAdapter
-from typing import Literal, Annotated, List
+from typing import Literal, Annotated, List, Optional, Any
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 import json
@@ -13,20 +13,33 @@ class Agents(Enum):
     TASK_EXECUTOR_AGENT = "TaskExecutorAgent"
     TASK_ERROR_REFLECTION_AGENT = "TaskErrorReflectionAgent"
 
+class Tool(BaseModel):
+    name: str = Field(default="", description="The name of the tool to be called")
+    prompt: str = Field(default="", description="The prompt to be used for the tool call")
+
+
+class StepMissingParameters(BaseModel):
+    parameter_name: str = Field(default="", description="The name of the missing parameter")
+    reference_data: Optional[str] = Field(default="", description="Reference data or description for the missing parameter")
+
+class Step(BaseModel):
+    step_id: float = Field(default="", description="Unique identifier for the step within the task")
+    description: str = Field(default="", description="Brief description of what this step does")
+    task_type: Literal['az_cli', 'python', 'deep_research'] = Field(default='az_cli'),
+    tool_prompt: str = Field(default="", description="The prompt to be used for the tool call in this step")
+    tool: Optional[Tool] = Field(default=Tool(), description="The tool to be called in this step")
+    tool_result: Optional[Any] = Field(default=None, description="The result of the tool call")
+    tool_error: Optional[Any] = Field(default=None, description="The error message if the tool call failed")
+    is_tool_call_successful: bool = Field(default=False, description="Indicates if the tool call was successful")
+    az_cli_command: Optional[str] = Field(default="", description="The generated Azure CLI command(s) for this step. Empty if task is Python step")
+    python: Optional[str] = Field(default="", description="The generated Python code snippet for this step. Empty if task is Azure CLI step")
+    missing_parameters: Optional[dict] = Field(default={}, description="A dictionary describing what info is needed for each missing parameter")
+
 class Task(BaseModel):
     task_id: str = Field(default="", description="Unique identifier for the task")
-    type: Literal['python', 'bash', 'azcli', 'deep_research'] = Field(default='other', description="Indicates if the task involves Python code execution")
-    bash_commands: List[str] = Field(default=[], description="Bash commands related to the task")
-    azcli_commands: List[str] = Field(default=[], description="Azure CLI commands related to the task")
-    python_code: str = Field(default="", description="Python code snippet for the task")
-    output: str | dict | List[str] | None = Field(default=None, description="The output or result of the task execution")
-    error: str = Field(default="", description="Error message if the task execution failed")
-    is_task_successful: bool = Field(default=False, description="Indicates if the task was completed successfully")
+    description: str = Field(default="", description="Brief description of the task")
+    steps: List[Step] = Field(default=[], description="List of steps in the task")
 
-
-class ToolResult(BaseModel):
-    task_id: str = Field(default="", description="Unique identifier for the task")
-    result: dict  | None = Field(default=None, description="The result of the action taken for the task")
 
 class MissingAzureValuesInPrompt(BaseModel):
     missing: dict = Field(default={}, description="The name of the missing field")
@@ -35,7 +48,6 @@ class MissingAzureValuesInPrompt(BaseModel):
 
 class TaskPlan(BaseModel):
     tasks: List[Task] = Field(default=[], description="List of tasks in the execution plan")
-    tool_results: List[ToolResult] = Field(default=[], description="List of action results for the tasks")
 
 class Scratchpad(BaseModel):
     """
@@ -45,7 +57,6 @@ class Scratchpad(BaseModel):
     resolved_prompt: str = Field(default="", description="The resolved prompt with resolved Azure resource values")
     missing_azure_values_in_prompt: MissingAzureValuesInPrompt = Field(default=MissingAzureValuesInPrompt(), description="A dictionary containing the missing information filled in by the user")
     #notes: dict = Field(default={}, description="A dict to hold general info or observations during workflow execution")
-    tool_results: List[ToolResult] = Field(default=[], description="List of action results recorded in the scratch pad")
     execution_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
     def to_string(self) -> str:
         for ar in self.action_results:

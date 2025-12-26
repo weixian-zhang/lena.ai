@@ -5,7 +5,7 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="X53L6LhyNuh9a8P0aRdQ-2" value="task planning &amp;amp; collect missing params&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" vertex="1" parent="1">
-          <mxGeometry x="56" y="-128" width="801" height="185" as="geometry" />
+          <mxGeometry x="49" y="-210" width="801" height="234" as="geometry" />
         </mxCell>
         <mxCell id="XX4dXZArKa_XB44Elnlg-7" value="tools" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;strokeColor=#006600;" parent="1" vertex="1">
           <mxGeometry x="743" y="261" width="122" height="391" as="geometry" />
@@ -294,13 +294,28 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="X53L6LhyNuh9a8P0aRdQ-1" value="Task Planner Agent&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- generate task-steps&lt;/span&gt;&lt;div&gt;- prompt for each step&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
-          <mxGeometry x="78" y="-95" width="135" height="70" as="geometry" />
+          <mxGeometry x="71" y="-177" width="135" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="X53L6LhyNuh9a8P0aRdQ-3" value="run az_cli&lt;div&gt;run code gen tools&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
-          <mxGeometry x="250" y="-95" width="109" height="70" as="geometry" />
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-3" value="generate az_cli&lt;div&gt;and python code for each step&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
+          <mxGeometry x="243" y="-177" width="109" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="X53L6LhyNuh9a8P0aRdQ-5" value="find all missing params" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
-          <mxGeometry x="396.5" y="-95" width="109" height="70" as="geometry" />
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-5" value="find all missing params from generated az cli commands and python code" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
+          <mxGeometry x="389.5" y="-177" width="116.5" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-6" value="HITL to fill-in missing parameters" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
+          <mxGeometry x="534" y="-177" width="116.5" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="X53L6LhyNuh9a8P0aRdQ-7" target="X53L6LhyNuh9a8P0aRdQ-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-7" value="update step-prompt" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;" vertex="1" parent="1">
+          <mxGeometry x="532.5" y="-41" width="118" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="X53L6LhyNuh9a8P0aRdQ-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="X53L6LhyNuh9a8P0aRdQ-6" target="X53L6LhyNuh9a8P0aRdQ-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="440" y="175" as="sourcePoint" />
+            <mxPoint x="440" y="343" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

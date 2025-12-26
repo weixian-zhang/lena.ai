@@ -4,6 +4,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import interrupt, Command
 from langchain_core.messages import HumanMessage
 from agents.state import ExecutionState, Scratchpad
+from agents.task_planner_agent import TaskPlanner
 from agents.task_param_collector_agent import ValueResolverAgent
 from typing import Tuple
 
@@ -12,6 +13,7 @@ class AzureWorkflow:
     
     def __init__(self):
         self.state: ExecutionState = ExecutionState()
+        self.task_planner = TaskPlanner()
         self.value_resolver_agent = ValueResolverAgent()
         self.workflow = CompiledStateGraph[StateT, ContextT, InputT, OutputT]
     
@@ -20,20 +22,24 @@ class AzureWorkflow:
         checkpointer = InMemorySaver()
 
         self.workflow = StateGraph(ExecutionState)
-        self.workflow.add_node("check_for_missing_azure_values", self.value_resolver_agent.check_for_missing_azure_values)
-        self.workflow.add_node("check_with_human_on_missing_values", self.value_resolver_agent.check_with_human_on_missing_values)
-        self.workflow.add_node('update_prompt_with_filled_values', self.value_resolver_agent.update_prompt_with_filled_values)
-        self.workflow.add_edge(START, "check_for_missing_azure_values")
-        self.workflow.add_conditional_edges(
-            "check_for_missing_azure_values", self.value_resolver_agent.need_human_to_fill_missing_values,
-            {
-                "need_human_to_fill_missing_values":  'check_with_human_on_missing_values', 
-                "no_need_human_to_fill_missing_values": END
-             }
-        )
-        # after human fills in missing values, re-check for missing values
-        self.workflow.add_edge("check_with_human_on_missing_values", 'update_prompt_with_filled_values')
-        self.workflow.add_edge('update_prompt_with_filled_values', 'check_for_missing_azure_values')
+
+        self.workflow.add_node("plan_tasks", self.task_planner.plan_tasks)
+        self.workflow.add_edge(START, "plan_tasks")
+        self.workflow.add_edge("plan_tasks", END)
+        # self.workflow.add_node("check_for_missing_azure_values", self.value_resolver_agent.check_for_missing_azure_values)
+        # self.workflow.add_node("check_with_human_on_missing_values", self.value_resolver_agent.check_with_human_on_missing_values)
+        # self.workflow.add_node('update_prompt_with_filled_values', self.value_resolver_agent.update_prompt_with_filled_values)
+        # self.workflow.add_edge(START, "check_for_missing_azure_values")
+        # self.workflow.add_conditional_edges(
+        #     "check_for_missing_azure_values", self.value_resolver_agent.need_human_to_fill_missing_values,
+        #     {
+        #         "need_human_to_fill_missing_values":  'check_with_human_on_missing_values', 
+        #         "no_need_human_to_fill_missing_values": END
+        #      }
+        # )
+        # # after human fills in missing values, re-check for missing values
+        # self.workflow.add_edge("check_with_human_on_missing_values", 'update_prompt_with_filled_values')
+        # self.workflow.add_edge('update_prompt_with_filled_values', 'check_for_missing_azure_values')
         self.workflow = self.workflow.compile(checkpointer=checkpointer)
 
         return self.workflow
@@ -75,25 +81,26 @@ if __name__ == "__main__":
 
     state = ExecutionState(
         scratchpad = Scratchpad(
-            original_prompt = prompt_2
+            original_prompt = prompt_1
         )
     )
     
     result = graph.invoke(input=state, config=config)
 
-    yes, missing_values = workflow.is_missing_values_for_human_input(result)
-    if yes:
+    pass
+    # yes, missing_values = workflow.is_missing_values_for_human_input(result)
+    # if yes:
 
-        filled_values = missing_values.copy()
+    #     filled_values = missing_values.copy()
 
-        for k, v in missing_values.items():
-            k_input = input(f"Please provide value for '{k}': ")
-            filled_values[k] = k_input
+    #     for k, v in missing_values.items():
+    #         k_input = input(f"Please provide value for '{k}': ")
+    #         filled_values[k] = k_input
 
-        state.scratchpad.missing_azure_values_in_prompt.filled = filled_values
+    #     state.scratchpad.missing_azure_values_in_prompt.filled = filled_values
         
-        result = graph.invoke(Command(resume=filled_values, update=state), config=config)
+    #     result = graph.invoke(Command(resume=filled_values, update=state), config=config)
 
-        print(result)
-    else:
-        print("Final Result:", result)
+    #     print(result)
+    # else:
+    #     print("Final Result:", result)
