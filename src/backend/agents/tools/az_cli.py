@@ -49,13 +49,15 @@ class AzCliTool(BaseTool):
     async def _arun(self, prompt: str) -> str:
         """Asynchronously generate Azure CLI command from the given prompt."""
 
+        az_cli_mcp_tool_name = "extension_cli_generate"
+
         async with self.az_mcp_session() as session:
 
             # Load the MCP tools into a list of LangChain BaseTool objects
             langchain_tools: list[BaseTool] = await load_mcp_tools(session)
 
             # Format tools for Azure OpenAI
-            tools = [tool for tool in langchain_tools if tool.name == self.name]
+            tools = [tool for tool in langchain_tools if tool.name == az_cli_mcp_tool_name]
 
             assert tools, "Error at Azure MCP tools, no Azure CLI generation tool found."
             assert len(tools) == 1, "Error at Azure MCP tools, expected exactly one Azure CLI generation tool."
@@ -187,7 +189,7 @@ if __name__ == "__main__":
         az_cli_tool = AzCliTool()
 
         result: AzCliToolResult = await az_cli_tool.ainvoke({
-            "prompt": "list all VM sku in southeast asia region"
+            "prompt": "create a Windows VM"
         })
 
         result.commands[0]

@@ -4,9 +4,9 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Base
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from prompt import missing_azure_values_system_prompt, update_user_prompt_with_filled_values_system_prompt
-from state import ExecutionState, Agents
-from utils import Util
+from agents.prompt import missing_azure_values_system_prompt, update_user_prompt_with_filled_values_system_prompt
+from agents.state import ExecutionState, Agents
+from agents.utils import Util
 import json
 
 
@@ -104,7 +104,7 @@ class ValueResolverAgent:
 
         return {
             'execution_state': execution_state,
-            'messages': [AIMessage(content=resolved_prompt)]
+            'messages': [AIMessage(content='missing values' + resolved_prompt)]
         }
     
     

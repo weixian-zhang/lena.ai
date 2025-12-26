@@ -3,8 +3,8 @@ from langgraph.graph.state import CompiledStateGraph, StateT, ContextT, InputT, 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import interrupt, Command
 from langchain_core.messages import HumanMessage
-from state import ExecutionState, Scratchpad
-from backend.agents.task_param_collector_agent import ValueResolverAgent
+from agents.state import ExecutionState, Scratchpad
+from agents.task_param_collector_agent import ValueResolverAgent
 from typing import Tuple
 
 class AzureWorkflow:
