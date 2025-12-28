@@ -24,4 +24,6 @@ class TaskPlanner:
 
         task_plan: TaskPlan = chain.invoke({})
 
+        prompts = [step.tool.prompt for t in task_plan.tasks for step in t.steps]
+
         return task_plan
