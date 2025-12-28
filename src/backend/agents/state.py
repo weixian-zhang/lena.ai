@@ -35,19 +35,23 @@ class MissingParameterContext(BaseModel):
     missing_parameters: List[MissingParameters] = Field(default=[], description="List of missing parameters for this step")
     
 
-class Step(BaseModel):
-    step_id: str = Field(default="", description="Unique identifier for the step within the task")
-    description: str = Field(default="", description="Brief description of what this step does")
+# class Step(BaseModel):
+#     step_id: str = Field(default="", description="Unique identifier for the step within the task")
+#     description: str = Field(default="", description="Brief description of what this step does")
+#     task_type: Literal['az_cli', 'python', 'deep_research'] = Field(default='az_cli'),
+#     tool: Optional[Tool] = Field(default=Tool(), description="The tool to be called in this step")
+#     az_cli_command: Optional[str] = Field(default="", description="The generated Azure CLI command(s) for this step. Empty if task is Python step")
+#     python: Optional[str] = Field(default="", description="The generated Python code snippet for this step. Empty if task is Azure CLI step")
+#     missing_parameter_context: Optional[MissingParameterContext] = Field(default=None, description="A dictionary describing what info is needed for each missing parameter")
+
+class Task(BaseModel):
+    task_id: str = Field(default="", description="Unique identifier for the task")
+    description: str = Field(default="", description="Brief description of the task")
     task_type: Literal['az_cli', 'python', 'deep_research'] = Field(default='az_cli'),
     tool: Optional[Tool] = Field(default=Tool(), description="The tool to be called in this step")
     az_cli_command: Optional[str] = Field(default="", description="The generated Azure CLI command(s) for this step. Empty if task is Python step")
     python: Optional[str] = Field(default="", description="The generated Python code snippet for this step. Empty if task is Azure CLI step")
     missing_parameter_context: Optional[MissingParameterContext] = Field(default=None, description="A dictionary describing what info is needed for each missing parameter")
-
-class Task(BaseModel):
-    task_id: str = Field(default="", description="Unique identifier for the task")
-    description: str = Field(default="", description="Brief description of the task")
-    steps: List[Step] = Field(default=[], description="List of steps in the task")
 
 
 # class MissingAzureValuesInPrompt(BaseModel):
