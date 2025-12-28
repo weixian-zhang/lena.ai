@@ -22,6 +22,6 @@ class TaskPlanner:
 
         chain = messages | llm
 
-        response = chain.invoke({})
+        task_plan: TaskPlan = chain.invoke({})
 
-        pass
+        return task_plan

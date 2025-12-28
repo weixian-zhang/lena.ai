@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     state = ExecutionState(
         scratchpad = Scratchpad(
-            original_prompt = prompt_1
+            original_prompt = prompt_2
         )
     )
     
