@@ -22,7 +22,7 @@ class DeepResearchInput(BaseModel):
 
 class DeepResearchTool(BaseTool):
     name: str = "deep_research_tool"
-    description: str = "A tool that can access the Internet to conduct deep research on a given user query using web searches and information gathering."
+    description: str = "A tool that can access the Internet to conduct deep web search on a given user query using web searches and information gathering."
     args_schema = DeepResearchInput
     metadata: dict = {}
     """The tool response format.

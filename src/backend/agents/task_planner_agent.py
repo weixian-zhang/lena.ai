@@ -8,7 +8,6 @@ from langchain_core.prompts import ChatPromptTemplate
 
 class TaskPlanner:
     
-
     def plan_tasks(self, execution_state: ExecutionState) -> str:
         llm : AzureChatOpenAI= Util.gpt_4o()
         llm = llm.with_structured_output(TaskPlan)
@@ -24,6 +23,10 @@ class TaskPlanner:
 
         task_plan: TaskPlan = chain.invoke({})
 
-        prompts = [step.tool.prompt for t in task_plan.tasks for step in t.steps]
+        prompts = [t.tool.prompt for t in task_plan.tasks]
 
         return task_plan
+    
+
+    def execute_tool(self, execution_state: ExecutionState) -> str:
+        pass
