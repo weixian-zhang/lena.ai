@@ -118,10 +118,13 @@ if __name__ == "__main__":
     async def main():
         az_cli_tool = AzCliTool()
 
-        result: AzCliToolResult = await az_cli_tool.ainvoke({
-            "prompt": "create a new Function app named <function_app_name> in resource group <resource_group_name> with Docker container using existing Storage account name 'strgcwhd'"
-        })
+        prompt_1 = "create a new Function app named <function_app_name> in resource group <resource_group_name> with Docker container using existing Storage account name 'strgcwhd' "
+        prompt_2 = "create new VM name <vm_name_1> in virtual network <virtual_network_name_1> in subnet <subnet_name_1> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <vm_image>"
 
+        result: AzCliToolResult = await az_cli_tool.ainvoke({
+            "prompt": prompt_2
+        })
+        # azcli: 'az vm create --resource-group rg-production-eastus --name <vm_name_1> --vnet-name <virtual_network_name_1> --subnet <subnet_name_1> --image <vm_image> --size <vm_size> --generate-ssh-keys'
         result.commands[0]
 
         az_shell = AzShell()

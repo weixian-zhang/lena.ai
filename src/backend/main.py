@@ -70,6 +70,42 @@ def is_hitl_needed(result: dict) -> Tuple[bool, dict[str,str]]:
     return True, missing_values_prompt
 
 
+# stream event to client with SSE.  
+# from fastapi.responses import StreamingResponse
+# import asyncio
+
+# @app.get("/workflow/{workflow_id}/stream")
+# async def stream_workflow(workflow_id: str):
+#     async def event_generator():
+#         config = workflows[workflow_id]["config"]
+        
+#         # Stream workflow events
+#         for event in graph.stream(None, config, stream_mode="values"):
+#             yield f"data: {json.dumps(event)}\n\n"
+            
+#             if event.get("status") == "waiting_for_input":
+#                 yield f"event: interrupt\ndata: {json.dumps(event)}\n\n"
+#                 break
+        
+#         yield "data: [DONE]\n\n"
+    
+#     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+# # Client with SSE
+# import sseclient
+# import requests
+
+# response = requests.get(f"{BASE_URL}/workflow/{workflow_id}/stream", stream=True)
+# client = sseclient.SSEClient(response)
+
+# for event in client.events():
+#     if event.event == "interrupt":
+#         # Handle interrupt immediately
+#         user_input = collect_input(json.loads(event.data))
+#         requests.post(f"{BASE_URL}/workflow/{workflow_id}/resume", 
+#                      json={"user_input": user_input})
+
+
 while True:
 
     current_input = state
