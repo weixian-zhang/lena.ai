@@ -103,7 +103,7 @@ class ValueResolverAgent:
         execution_state.scratchpad.resolved_prompt = resolved_prompt
 
         return {
-            'execution_state': execution_state,
+            'scratchpad': execution_state.scratchpad,
             'messages': [AIMessage(content='missing values' + resolved_prompt)]
         }
     

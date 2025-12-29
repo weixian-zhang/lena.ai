@@ -2,16 +2,15 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Annotated, List, Optional, Any, Dict
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-import json
-from enum import Enum
 
-class Agents(Enum):
-    VALUE_RESOLVER_AGENT = "ValueResolverAgent"
-    TASK_PLANNER_AGENT = "TaskPlannerAgent"
-    TASK_REFLECTION_AGENT = "TaskReflectionAgent"
-    EXECUTION_PLAN_SUPERVISOR_AGENT = "ExecutionPlanSupervisorAgent"
-    TASK_EXECUTOR_AGENT = "TaskExecutorAgent"
-    TASK_ERROR_REFLECTION_AGENT = "TaskErrorReflectionAgent"
+
+# class Agents(Enum):
+#     VALUE_RESOLVER_AGENT = "ValueResolverAgent"
+#     TASK_PLANNER_AGENT = "TaskPlannerAgent"
+#     TASK_REFLECTION_AGENT = "TaskReflectionAgent"
+#     EXECUTION_PLAN_SUPERVISOR_AGENT = "ExecutionPlanSupervisorAgent"
+#     TASK_EXECUTOR_AGENT = "TaskExecutorAgent"
+#     TASK_ERROR_REFLECTION_AGENT = "TaskErrorReflectionAgent"
 
 class ToolResult(BaseModel):
     is_successful: bool = Field(default=False, description="Indicates if the tool call was successful")
@@ -45,6 +44,9 @@ class MissingParameterContext(BaseModel):
 #     missing_parameter_context: Optional[MissingParameterContext] = Field(default=None, description="A dictionary describing what info is needed for each missing parameter")
 
 class Task(BaseModel):
+    """
+    - task_type: "az_cli" | "python", "deep_research", "bash"
+    """
     task_id: str = Field(default="", description="Unique identifier for the task")
     description: str = Field(default="", description="Brief description of the task")
     task_type: Literal['az_cli', 'python', 'deep_research'] = Field(default='az_cli'),
@@ -62,13 +64,13 @@ class Task(BaseModel):
 class TaskPlan(BaseModel):
     tasks: List[Task] = Field(default=[], description="List of tasks in the execution plan")
     
-    def tool_results(self) -> Dict[str, Any]:
+    def task_results(self) -> Dict[str, Any]:
         results = {}
         for task in self.tasks:
-            for step in task.steps:
-                if step.tool and step.tool.tool_result:
-                    results_key = f"task_{task.task_id}_step_{step.step_id}"
-                    results[results_key] = step.tool.tool_result
+            if task.tool and task.tool.tool_result:
+                tool_result: Dict[str, str] = task.tool.tool_result.result if task.tool.tool_result.result else {}
+                results_key = task.task_id
+                results[results_key] = tool_result
         return results
 
 class Scratchpad(BaseModel):
@@ -79,7 +81,7 @@ class Scratchpad(BaseModel):
     resolved_prompt: str = Field(default="", description="The resolved prompt with resolved Azure resource values")
     #missing_azure_values_in_prompt: MissingAzureValuesInPrompt = Field(default=MissingAzureValuesInPrompt(), description="A dictionary containing the missing information filled in by the user")
     #notes: dict = Field(default={}, description="A dict to hold general info or observations during workflow execution")
-    execution_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
+    task_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
 
 
 class ExecutionState(BaseModel):
