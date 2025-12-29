@@ -3,7 +3,7 @@ from langchain_core.tools import BaseTool
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from typing import List, Optional, List
+from typing import List, Optional, List, Type
 from agents.utils import Util
 
 class BashToolInput(BaseModel):
@@ -24,29 +24,30 @@ class BashTool(BaseTool):
     generates bash commands based on user prompt.
     Use this tool to directly to any generate Linux Bash commands like: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.
     """
-    args_schema: BashToolInput = BashToolInput()
-    response_format: BashToolResult = BashToolResult()
+    args_schema: Type[BaseModel] = BashToolInput
+    response_format: Type[BaseModel] = BashToolResult
 
-    def _run(self, prompt: str) -> str:
+    def _run(self, prompt: str) -> BashToolResult:
         """Generate code snippet from the given prompt."""
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, prompt: str) -> str:
+    async def _arun(self, prompt: str) -> BashToolResult:
         """Asynchronously generate bash command from the given prompt.""" 
         
         try:
-            llm : AzureChatOpenAI= Util.gpt_4o()
+
+            llm : AzureChatOpenAI = Util.gpt_4o()
             llm = llm.with_structured_output(BashToolOutput)
             
             messages = ChatPromptTemplate.from_messages(
                 [
                     SystemMessage(content="""
-                    You are a bash command generator.
+                    You are a Linux bash command generator.
                                 
                     <Key Requirements>
-                    Generate one or a list of multiple bash commands to fulfill the user prompt task.
-                    Always generate only the bash command without any explanation.
+                    1. Generate one or a list of multiple bash commands to fulfill the user prompt task.
+                    2. Always generate only the bash commands without any explanation.
                                 
                     <command generation scenarios>
                     - Docker build and run commands like docker build, docker runtext processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.
@@ -76,11 +77,11 @@ class BashTool(BaseTool):
 
             output: BashToolOutput = chain.invoke({})
 
-            bash_command = output.commands
+            bash_commands = output.commands
 
             return BashToolResult(
                 is_success=True,
-                bash_command=bash_command,
+                commands=bash_commands,
                 error="")
 
         except Exception as e:
@@ -92,6 +93,8 @@ class BashTool(BaseTool):
 
 if __name__ == "__main__":
     import asyncio
+    from dotenv import load_dotenv
+    load_dotenv()
 
     bash_tool = BashTool()
     prompt = """authenticate to docker hub with username 'myuser' and password 'mypassword', 

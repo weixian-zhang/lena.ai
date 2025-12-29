@@ -5,8 +5,11 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Type, Any, List, Optional, Dict
 import os
-from dotenv import load_dotenv
-load_dotenv()
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, parent_dir)
+from config import Config
 
 # Get the absolute path of the parent directory
 # parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -102,13 +105,15 @@ class CodeTool(BaseTool):
 
         try:
 
-            deployment_name = os.getenv("AZURE_OPENA_AI_MODEL_DEPLOYMENT_NAME")
-            api_url = os.getenv("FOUNDRY_ENDPOINT")
-            api_key = os.getenv("AZURE_OPENAI_API_KEY")
+            config = Config()
+
+            deployment_name = config.azure_openai_deployment_name
+            foundry_endpoint = config.foundry_endpoint
+            api_key = config.azure_openai_api_key
 
             llm = OpenAIServerModel(
                 model_id=deployment_name,
-                api_base=api_url,
+                api_base=foundry_endpoint,
                 api_key=api_key
             )
             
@@ -259,6 +264,8 @@ class CodeTool(BaseTool):
 # test tool
 if __name__ == "__main__":
     import asyncio
+    from dotenv import load_dotenv
+    load_dotenv()
 
     username = 'admin@MngEnvMCAP049172.onmicrosoft.com'
     agent_cwd = os.path.join(os.getenv("AGENT_WORKING_DIRECTORY"), username)

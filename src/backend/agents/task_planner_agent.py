@@ -5,11 +5,12 @@ from agents.prompt import task_planner_system_prompt
 from agents.state import ExecutionState,  TaskPlan
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
+from typing import Any, Dict
 
 class TaskPlanner:
     
-    def plan_tasks(self, execution_state: ExecutionState) -> str:
-        llm : AzureChatOpenAI= Util.gpt_4o()
+    def plan_tasks(self, execution_state: ExecutionState) -> Dict[str, Any]:
+        llm : AzureChatOpenAI = Util.gpt_4o()
         llm = llm.with_structured_output(TaskPlan)
         
         messages = ChatPromptTemplate.from_messages(

@@ -9,7 +9,7 @@ from config import Config
 class Util:
 
     @staticmethod
-    def gpt_4o() -> str:
+    def gpt_4o() -> AzureChatOpenAI:
         config = Config()
 
         return AzureChatOpenAI(
