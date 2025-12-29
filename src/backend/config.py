@@ -16,9 +16,7 @@ class Config:
             return
         self.__initialized = True
 
-        current_dir  = os.path.dirname(os.path.abspath(__file__))
-        agent_directory_name = os.getenv("AGENT_WORKING_DIRECTORY", ".agent_cwd")
-        self.agent_cwd = os.path.join(current_dir, agent_directory_name)
+        self.agent_cwd = os.getenv("AGENT_WORKING_DIRECTORY")
         self.ensure_cwd_exists(self.agent_cwd)
         self.client_id = os.getenv("AZURE_CLIENT_ID")
         self.client_secret = os.getenv("AZURE_CLIENT_SECRET")

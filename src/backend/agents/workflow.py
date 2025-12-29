@@ -66,6 +66,7 @@ class AzureWorkflow:
 if __name__ == "__main__":
     from state import Agents
     from dotenv import load_dotenv
+    import os
     load_dotenv()
 
     config = {"configurable": {"thread_id": '1'}} #str(uuid.uuid4())}}
@@ -79,7 +80,14 @@ if __name__ == "__main__":
     2. peer the 3 VNets together.
     3. create 3 VMs one in each subnet, 2 Linux VMs and 1 Windows VM."""
 
+    username = 'admin@MngEnvMCAP049172.onmicrosoft.com'
+    agent_working_dir = os.path.join(config.agent_cwd, username)
+    config.ensure_cwd_exists(agent_working_dir)
+
     state = ExecutionState(
+        username = username,
+        thread_id = '1',
+        agent_cwd = agent_working_dir,
         scratchpad = Scratchpad(
             original_prompt = prompt_2
         )
