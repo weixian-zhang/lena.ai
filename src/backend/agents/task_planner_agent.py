@@ -24,9 +24,14 @@ class TaskPlanner:
 
         task_plan: TaskPlan = chain.invoke({})
 
-        prompts = [t.tool.prompt for t in task_plan.tasks]
+        # prompts = [t.tool.prompt for t in task_plan.tasks]
 
-        return task_plan
+        execution_state.task_plan = task_plan
+
+        return {
+            'execution_state': execution_state,
+            'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
+        }
     
 
     def execute_tool(self, execution_state: ExecutionState) -> str:
