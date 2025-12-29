@@ -83,5 +83,8 @@ class Scratchpad(BaseModel):
 
 
 class ExecutionState(BaseModel):
+    username: str = Field(default="", description="The username of the person initiating the agent")
+    thread_id: str = Field(default="", description="The LangGraph thread id associated with this execution")
+    agent_cwd = Field(default="", description="The current working directory for the agent")
     scratchpad: Scratchpad = Field(default=Scratchpad(), description="The scratchpad for temporary notes and observations")
     messages: Annotated[list[BaseMessage], Field(default=[], description="Conversation history"), add_messages]
