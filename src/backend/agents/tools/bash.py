@@ -6,17 +6,13 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, List, Type
 from agents.utils import Util
 
-class BashToolInput(BaseModel):
-    prompt: str = Field(description="the prompt to generate bash command for")
+import os, sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+from state import BashToolInput, BashToolResult
 
-class BashToolOutput(BaseModel):
+class BashToolStructuredOutput(BaseModel):
     commands: List[str] = Field(description="The generated bash command based on the prompt.")
-
-class BashToolResult(BaseModel):
-    is_success: bool = Field(description="Indicates whether the bash command was generated successfully.")
-    commands: Optional[List[str]] = Field(description="The generated bash command based on the prompt.")
-    error: Optional[str] = Field(default=None, description="The result of executing the generated bash command, if applicable.")
-
 
 class BashTool(BaseTool):
     name: str = "bash_command_generator"
@@ -38,7 +34,7 @@ class BashTool(BaseTool):
         try:
 
             llm : AzureChatOpenAI = Util.gpt_4o()
-            llm = llm.with_structured_output(BashToolOutput)
+            llm = llm.with_structured_output(BashToolStructuredOutput)
             
             messages = ChatPromptTemplate.from_messages(
                 [

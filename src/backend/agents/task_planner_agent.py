@@ -34,5 +34,21 @@ class TaskPlanner:
         }
     
 
-    def execute_tool(self, execution_state: ExecutionState) -> str:
-        pass
+    def prompt_to_code(self, execution_state: ExecutionState) -> str:
+        
+        for task in execution_state.scratchpad.task_plan.tasks:
+            
+            # "az_cli" | "python", "deep_research", "bash"
+
+            if task.task_type == 'az_cli':
+                # execute az cli command
+                pass
+            elif task.task_type == 'python':
+                # execute python code
+                pass
+            elif task.task_type == 'deep_research':
+                # perform deep research
+                pass
+            elif task.task_type == 'bash':
+                # execute bash command
+                pass

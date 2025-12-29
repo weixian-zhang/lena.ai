@@ -9,14 +9,10 @@ from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from typing import Type
 
-class AzureCliToolInput(BaseModel):
-    prompt: str = Field(..., description="'")
-
-class AzCliToolResult(BaseModel):
-    prompt: str = Field(default='', description="'The user intent of the task to be solved by using the CLI tool.'")
-    success: bool = Field(default=False, description="'Indicates whether the Azure CLI command was generated successfully.'")
-    commands: list[str] = Field(default=[], description="'The list of generated Azure CLI command(s).'")
-    error: str = Field(default='', description="'Error message if the command generation failed.'")
+import os, sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+from state import AzCliToolResult, AzureCliToolInput
 
 class AzCliTool(BaseTool):
     name: str = "azure_cli_generate"

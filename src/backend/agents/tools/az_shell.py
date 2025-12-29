@@ -7,19 +7,16 @@ from dotenv import load_dotenv
 import os
 from langchain_core.tools import BaseTool
 from typing import Type
-
-import sys
 import subprocess
+
+import os, sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+from state import AzShellToolInput, AzShellToolResult
 
 load_dotenv()
 
-class AzShellToolInput(BaseModel):
-    command: str = Field(description="The bash or Azure CLI command to execute.")
 
-class AzShellToolResult(BaseModel):
-    success: bool = Field(description="Indicates whether the command executed successfully.")
-    stdout: Optional[str] = Field(description="The output of the executed shell command.")
-    stderr: Optional[str] = Field(default=None, description="The error output of the executed shell command.")
 
 # class AzShellToolResult(BaseModel):
 #     success: bool = Field(description="Indicates whether the command executed successfully.")
