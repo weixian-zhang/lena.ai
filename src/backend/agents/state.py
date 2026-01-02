@@ -1,48 +1,43 @@
-from pydantic import BaseModel, Field, ConfigDict
+from click import Option
+from pydantic import BaseModel, Field
 from typing import Literal, Annotated, List, Optional, Any, Dict
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-from agents.tools.az_cli import AzCliTool, AzCliToolResult
-from agents.tools.code import CodeTool, CodeToolResult
-from agents.tools.bash import BashTool, BashToolResult
-from agents.tools.deep_research import DeepResearchTool, DeepResearchToolResult
-# class Agents(Enum):
-#     VALUE_RESOLVER_AGENT = "ValueResolverAgent"
-#     TASK_PLANNER_AGENT = "TaskPlannerAgent"
-#     TASK_REFLECTION_AGENT = "TaskReflectionAgent"
-#     EXECUTION_PLAN_SUPERVISOR_AGENT = "ExecutionPlanSupervisorAgent"
-#     TASK_EXECUTOR_AGENT = "TaskExecutorAgent"
-#     TASK_ERROR_REFLECTION_AGENT = "TaskErrorReflectionAgent"
 
-# base classes
+import os, sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+
+###### base classes
 class ToolResult(BaseModel):
     is_successful: bool = Field(default=False, description="Indicates if the tool call was successful")
     error: Optional[str] = Field(default='', description="The error message if the tool call failed")
 
-# az cli tool
+###### az cli tool
 class AzureCliToolInput(BaseModel):
     prompt: str = Field(..., description="'")
 
-class AzCliToolResult(ToolResult):
+class AzCliToolCodeResult(ToolResult):
     commands: list[str] = Field(default=[], description="'The list of generated Azure CLI command(s).'")
 
-# shell tool
+###### shell tool
 class AzShellToolInput(BaseModel):
     command: str = Field(description="The bash or Azure CLI command to execute.")
 
-class AzShellToolResult(ToolResult):
+class AzShellToolExecutionResult(ToolResult):
     stdout: Optional[str] = Field(description="The output of the executed shell command.")
     stderr: Optional[str] = Field(default=None, description="The error output of the executed shell command.")
 
-# bash tool
+###### bash tool
 class BashToolInput(BaseModel):
     prompt: str = Field(description="the prompt to generate bash command for")
 
-class BashToolResult(BaseModel):
+class BashToolCodeResult(ToolResult):
     commands: Optional[List[str]] = Field(description="The generated bash command based on the prompt.")
 
 
-# code tool
+###### code tool
 class CodeToolInput(BaseModel):
     prompt: str = Field(..., description="The prompt to generate code for")
     agent_cwd: Optional[str] = Field(default=None, description="The working directory for the agent to read/write files.")
@@ -71,25 +66,21 @@ class CodeAgentActionOutput(BaseModel):
     result: Any = Field(default=None, description="The final output from the code execution.")
     is_successful: bool = Field(default=False, description="Indicates whether this is the final answer from the agent.")
 
-class CodeToolResult(ToolResult):
+
+class CodeToolExecutionResult(ToolResult):
     messages: Optional[List] = Field(default=[], description="The messages exchanged during the code generation and execution process.")
     action_steps: Optional[List[CodeAgentActionStep]] = Field(default=[], description="All action steps taken during code generation and execution.")
     action_outputs: Optional[List[CodeAgentActionOutput]] = Field(default=[], description="The final output from the agent after executing all steps.")
-
-    def final_result(self) -> CodeAgentActionOutput:
-        result = self.action_outputs[-1] if self.action_outputs else None
-        return result
-
+    result: Optional[CodeAgentActionOutput] = Field(default=None, description="The final result from the code tool execution.")
     
-# class ToolResult(BaseModel):
-#     is_successful: bool = Field(default=False, description="Indicates if the tool call was successful")
-#     result: Optional[Dict[str, str]] = Field( default={}, description="The result data from the tool call")
-#     error: Optional[str] = Field(default='', description="The error message if the tool call failed")
 
-# class Tool(BaseModel):
-#     name: str = Field(default="", description="The name of the tool to be called")
-#     prompt: str = Field(default="", description="The prompt to be used for the tool call")
-#     tool_result: Optional[ToolResult] = Field(default=ToolResult(), description="The result of the tool call")
+###### deep research tool
+class DeepResearchToolInput(BaseModel):
+    query: str = Field(description="The user query for deep web research.")
+
+class DeepResearchToolExecutionResult(ToolResult):
+    result: str = Field(description="The result of the deep web research.")
+
 
 class TaskPlannerTaskOutput(BaseModel):
     task_id: str = Field(default="", description="Unique identifier for the task")
@@ -120,7 +111,14 @@ class Task(BaseModel):
     description: str = Field(default="", description="Brief description of the task")
     task_type: Literal['az_cli', 'python', 'deep_research', 'bash'] = Field(default='az_cli'),
     prompt: str = Field(default="", description="The prompt describing the task to be accomplished")
-    tool_result: Optional[Dict[Literal['az_cli', 'python', 'deep_research', 'bash'], ToolResult]] = Field(default={}, description="The result from the tool execution for this task")
+    bash_commands: Optional[List[str]] = Field(default=[], description="The generated bash command(s) for this task. Empty if task is not bash step")
+    az_cli_commands: Optional[List[str]] = Field(default=[], description="The generated Azure CLI command(s) for this task. Empty if task is not Azure CLI step")
+    az_cli_execution_result: Optional[List[AzShellToolExecutionResult]] = Field(default=None, description="The execution result of the Azure CLI commands for this task")
+    bash_execution_result: Optional[List[AzShellToolExecutionResult]] = Field(default=None, description="The execution result of the bash commands for this task")
+    python_execution_result: Optional[CodeToolExecutionResult] = Field(default=None, description="The execution result of the python code for this task")
+    deep_research_result: Optional[DeepResearchToolExecutionResult] = Field(default=None, description="The result of the deep web research for this task")
+
+    #tool_execution_result: Optional[Dict[Literal['az_cli', 'python', 'deep_research', 'bash'], AzShellToolExecutionResult | CodeToolExecutionResult | DeepResearchToolExecutionResult]] = Field(default={}, description="The result from the tool execution for this task")
     # az_cli_tool_result: AzCliToolResult = Field(default=AzCliToolResult(), description="Azure CLI commands from tool based on user prompt")
     # code_tool_result: CodeToolResult = Field(default=CodeToolResult(), description="python code snippet from tool based on user prompt")
     # bash_tool_result: BashToolResult = Field(default=BashToolResult(), description="bash commands from tool based on user prompt")
@@ -144,10 +142,10 @@ class TaskPlan(BaseModel):
         return results
 
 
-class ExecutionConfig(BaseModel):
-    username: str = Field(default="", description="The username of the person initiating the agent")
-    thread_id: str = Field(default="", description="The LangGraph thread id associated with this execution")
-    agent_cwd: str = Field(default="", description="The current working directory for the agent")
+# class ExecutionConfig(BaseModel):
+#     username: str = Field(default="", description="The username of the person initiating the agent")
+#     thread_id: str = Field(default="", description="The LangGraph thread id associated with this execution")
+#     agent_cwd: str = Field(default="", description="The current working directory for the agent")
 
 
 class Scratchpad(BaseModel):
@@ -161,7 +159,8 @@ class Scratchpad(BaseModel):
     task_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
 
 
+from config import Config
 class ExecutionState(BaseModel):
-    execution_config: ExecutionConfig = Field(default=ExecutionConfig(), description="The configuration for the current execution")
+    username: str = Field(default="", description="The username of the person initiating the agent")
     scratchpad: Scratchpad = Field(default=Scratchpad(), description="The scratchpad for temporary notes and observations")
     messages: Annotated[list[BaseMessage], Field(default=[], description="Conversation history"), add_messages]

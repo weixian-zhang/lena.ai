@@ -13,7 +13,7 @@ sys.path.insert(0, parent_dir)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, parent_dir)
 
-from state import CodeToolResult, CodeAgentActionOutput, CodeAgentActionStep, CodeAgentToolCall, CodeToolInput
+from state import CodeToolExecutionResult, CodeAgentActionOutput, CodeAgentActionStep, CodeAgentToolCall, CodeToolInput
 from config import Config
 
 # Get the absolute path of the parent directory
@@ -56,7 +56,7 @@ class CodeTool(BaseTool):
         self.config = config
 
     args_schema: Type[BaseModel] = CodeToolInput
-    response_format: Type[BaseModel] = CodeToolResult
+    response_format: Type[BaseModel] = CodeToolExecutionResult
 
 
     def _run(self, prompt: str) -> str:
@@ -64,7 +64,7 @@ class CodeTool(BaseTool):
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, prompt: str, agent_cwd: str = None, execute_code: Optional[bool] = True, **kwargs) -> CodeToolResult:
+    async def _arun(self, prompt: str, agent_cwd: str = None) -> CodeToolExecutionResult:
         """Asynchronous version of the code generator and executor"""
 
         try:
@@ -145,7 +145,7 @@ class CodeTool(BaseTool):
                                    executor_type="local",
                                    tools=[DuckDuckGoSearchTool()])
 
-            result = CodeToolResult()
+            result = CodeToolExecutionResult()
 
 
             stream_generator = code_agent.run(prompt, stream=True)
@@ -184,17 +184,16 @@ class CodeTool(BaseTool):
                             is_successful = response.output['is_successful'],
                             result = response.output['result']
                         ))
-                
-                # if self._has_output(response):
-                #     result.output = response.output
 
-                # if self._error(response) and self._is_final_answer(response):
-                #     result.error = response.error
+
+            final_output = result.action_outputs[-1] if result.action_outputs else None
+            result.is_successful = final_output.is_successful if final_output else False
+            result.result = final_output.result if final_output else None
 
             return result
         
         except Exception as e:
-            result = CodeToolResult()
+            result = CodeToolExecutionResult()
             result.action_outputs = [CodeAgentActionOutput(
                 is_successful=False,
                 result=str(e)
@@ -242,7 +241,7 @@ if __name__ == "__main__":
      give me a summary of what this data is about.
     """
     
-    result: CodeToolResult = asyncio.run(code_tool._arun(prompt=read_file_prompt_1, agent_cwd=agent_cwd, execute_code=False))
+    result: CodeToolExecutionResult = asyncio.run(code_tool._arun(prompt=read_file_prompt_1, agent_cwd=agent_cwd))
 
     result = result.final_result()
 
