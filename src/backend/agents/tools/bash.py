@@ -1,6 +1,6 @@
 from langchain_openai import AzureChatOpenAI
 from langchain_core.tools import BaseTool
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
+from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from typing import List, Optional, List, Type
@@ -9,7 +9,7 @@ from agents.utils import Util
 import os, sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
-from state import BashToolInput, BashToolResult
+from state import BashToolInput, BashToolCodeResult
 
 class BashToolStructuredOutput(BaseModel):
     commands: List[str] = Field(description="The generated bash command based on the prompt.")
@@ -21,14 +21,14 @@ class BashTool(BaseTool):
     Use this tool to directly to any generate Linux Bash commands like: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.
     """
     args_schema: Type[BaseModel] = BashToolInput
-    response_format: Type[BaseModel] = BashToolResult
+    response_format: Type[BaseModel] = BashToolCodeResult
 
-    def _run(self, prompt: str) -> BashToolResult:
+    def _run(self, prompt: str) -> BashToolCodeResult:
         """Generate code snippet from the given prompt."""
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, prompt: str) -> BashToolResult:
+    async def _arun(self, prompt: str) -> BashToolCodeResult:
         """Asynchronously generate bash command from the given prompt.""" 
         
         try:
@@ -75,13 +75,13 @@ class BashTool(BaseTool):
 
             bash_commands = output.commands
 
-            return BashToolResult(
+            return BashToolCodeResult(
                 is_successful=True,
                 commands=bash_commands,
                 error="")
 
         except Exception as e:
-            return BashToolResult(
+            return BashToolCodeResult(
                 is_successful=False,
                 commands=[],
                 error=str(e))
@@ -97,6 +97,6 @@ if __name__ == "__main__":
     then pull the latest nginx image and 
     run a container named 'mynginx' mapping host port 8080 to container port 80."""
 
-    result: BashToolResult = asyncio.run(bash_tool._arun(prompt))
+    result: BashToolCodeResult = asyncio.run(bash_tool._arun(prompt))
 
     print(result)

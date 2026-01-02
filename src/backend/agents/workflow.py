@@ -3,9 +3,10 @@ from langgraph.graph.state import CompiledStateGraph, StateT, ContextT, InputT, 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import interrupt, Command
 from langchain_core.messages import HumanMessage
+
 from agents.state import ExecutionState, Scratchpad
 from agents.task_planner_agent import TaskPlanner
-from agents.task_param_collector_agent import ValueResolverAgent
+# from agents.task_param_collector_agent import ValueResolverAgent
 from typing import Tuple
 
 class AzureWorkflow:
@@ -14,8 +15,6 @@ class AzureWorkflow:
     def __init__(self):
         self.state: ExecutionState = ExecutionState()
         self.task_planner = TaskPlanner()
-        self.value_resolver_agent = ValueResolverAgent()
-        self.workflow = CompiledStateGraph[StateT, ContextT, InputT, OutputT]
     
     def build_graph(self) -> CompiledStateGraph[StateT, ContextT, InputT, OutputT]:
 
@@ -64,16 +63,19 @@ class AzureWorkflow:
         return True, missing_values_prompt
 
 if __name__ == "__main__":
-    from state import Agents
-    from dotenv import load_dotenv
     import os
+    from dotenv import load_dotenv
     load_dotenv()
+    
+    from config import Config
+    config = Config()
 
-    config = {"configurable": {"thread_id": '1'}} #str(uuid.uuid4())}}
+    graph_config = {"configurable": {"thread_id": '1'}} #str(uuid.uuid4())}}
 
     workflow = AzureWorkflow()
     graph = workflow.build_graph()
 
+    prompt_qa_1 = "What is Microsoft Azure?"
     prompt_1 = "Create an Azure VM with 4 CPUs and 16GB RAM in East US region."
     prompt_2 = """
     1. create a landing zone with 3 VNets, each VNet should have 1 subnets.
@@ -86,14 +88,13 @@ if __name__ == "__main__":
 
     state = ExecutionState(
         username = username,
-        thread_id = '1',
-        agent_cwd = agent_working_dir,
+        environment_config=config,
         scratchpad = Scratchpad(
             original_prompt = prompt_2
         )
     )
     
-    result = graph.invoke(input=state, config=config)
+    result = graph.invoke(input=state, config=graph_config)
 
     pass
     # yes, missing_values = workflow.is_missing_values_for_human_input(result)

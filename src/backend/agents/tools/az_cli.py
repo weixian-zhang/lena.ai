@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
 import json
 from typing import AsyncGenerator
-from tool import AgentTool
-from langchain.tools import BaseTool
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -14,9 +12,9 @@ import os, sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 
-from state import AzCliToolResult, AzureCliToolInput
+from state import AzCliToolCodeResult, AzureCliToolInput
 
-class AzCliTool(AgentTool):
+class AzCliTool(BaseTool):
     name: str = "azure_cli_generate"
     description: str = """
     'This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user.
@@ -36,15 +34,15 @@ class AzCliTool(AgentTool):
     - Automate Azure infrastructure tasks
     """
     args_schema: Type[BaseModel] = AzureCliToolInput
-    response_format: Type[BaseModel] = AzCliToolResult
+    response_format: Type[BaseModel] = AzCliToolCodeResult
 
 
-    def _run(self, prompt: str) -> AzCliToolResult:
+    def _run(self, prompt: str) -> AzCliToolCodeResult:
         """Generate code snippet from the given prompt."""
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, prompt: str) -> AzCliToolResult:
+    async def _arun(self, prompt: str) -> AzCliToolCodeResult:
         """Asynchronously generate Azure CLI command from the given prompt."""
 
         az_cli_mcp_tool_name = "extension_cli_generate"
@@ -67,7 +65,7 @@ class AzCliTool(AgentTool):
                     "cli-type": "az"
                 })
 
-            result = AzCliToolResult(prompt=prompt)
+            result = AzCliToolCodeResult(prompt=prompt)
             
             for r in mcp_result:
                 td = json.loads(r['text'])
@@ -119,7 +117,7 @@ if __name__ == "__main__":
         prompt_1 = "create a new Function app named <function_app_name> in resource group <resource_group_name> with Docker container using existing Storage account name 'strgcwhd' "
         prompt_2 = "create new VM name <vm_name_1> in virtual network <virtual_network_name_1> in subnet <subnet_name_1> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <vm_image>"
 
-        result: AzCliToolResult = await az_cli_tool.ainvoke({
+        result: AzCliToolCodeResult = await az_cli_tool.ainvoke({
             "prompt": prompt_2
         })
         # azcli: 'az vm create --resource-group rg-production-eastus --name <vm_name_1> --vnet-name <virtual_network_name_1> --subnet <subnet_name_1> --image <vm_image> --size <vm_size> --generate-ssh-keys'
