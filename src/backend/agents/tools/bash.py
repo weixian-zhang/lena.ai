@@ -76,14 +76,14 @@ class BashTool(BaseTool):
             bash_commands = output.commands
 
             return BashToolResult(
-                is_success=True,
+                is_successful=True,
                 commands=bash_commands,
                 error="")
 
         except Exception as e:
             return BashToolResult(
-                is_success=False,
-                bash_command="",
+                is_successful=False,
+                commands=[],
                 error=str(e))
         
 

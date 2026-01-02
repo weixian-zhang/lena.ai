@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import json
 from typing import AsyncGenerator
+from tool import AgentTool
 from langchain.tools import BaseTool
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp import ClientSession, StdioServerParameters
@@ -12,9 +13,10 @@ from typing import Type
 import os, sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
+
 from state import AzCliToolResult, AzureCliToolInput
 
-class AzCliTool(BaseTool):
+class AzCliTool(AgentTool):
     name: str = "azure_cli_generate"
     description: str = """
     'This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user.
@@ -37,12 +39,12 @@ class AzCliTool(BaseTool):
     response_format: Type[BaseModel] = AzCliToolResult
 
 
-    def _run(self, prompt: str) -> str:
+    def _run(self, prompt: str) -> AzCliToolResult:
         """Generate code snippet from the given prompt."""
         raise NotImplementedError("Synchronous code generation is not implemented.")
 
 
-    async def _arun(self, prompt: str) -> str:
+    async def _arun(self, prompt: str) -> AzCliToolResult:
         """Asynchronously generate Azure CLI command from the given prompt."""
 
         az_cli_mcp_tool_name = "extension_cli_generate"
@@ -69,7 +71,7 @@ class AzCliTool(BaseTool):
             
             for r in mcp_result:
                 td = json.loads(r['text'])
-                result.success = True if td.get('message', '').lower() == 'success' else False
+                result.is_successful = True if td.get('message', '').lower() == 'success' else False
                 command_data = td.get('results', '').get('command', '{}')
                 command_data = json.loads(command_data)
 

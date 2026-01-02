@@ -7,8 +7,13 @@ from typing import Type, Any, List, Optional, Dict
 import os
 import sys
 
+import os, sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, parent_dir)
+
+from state import CodeToolResult, CodeAgentActionOutput, CodeAgentActionStep, CodeAgentToolCall, CodeToolInput
 from config import Config
 
 # Get the absolute path of the parent directory
@@ -17,51 +22,6 @@ from config import Config
 # from config import Config
 
 # config = Config()
-
-class CodeToolInput(BaseModel):
-    prompt: str = Field(..., description="The prompt to generate code for")
-    agent_cwd: Optional[str] = Field(default=None, description="The working directory for the agent to read/write files.")
-    execute_code: Optional[bool] = Field(default=False, description="If true, the generated Python code will be executed.")
-
-class CodeAgentToolCall(BaseModel):
-    name: str = Field(..., description="The name of the tool called by the code agent.")
-    arg: Optional[str | Any | None] = Field(default=None, description="The arguments passed to the tool.")
-
-class CodeAgentActionStep(BaseModel):
-    """
-    - error: contains execution errors throughout all code execution steps.
-    """
-    step_number: Optional[int] = Field(default=None, description="The step number of the action step.")
-    code_action: str = Field(default='', description="The code action taken by the code agent.")
-    action_output: Optional[Any | None] = Field(default=None, description="The output from executing the code action.")
-    observations: str | None  = Field(default=None, description="The observations from executing the code action.")
-    # observations_images: list[PIL.Image.Image] | None = Field(default=None, description="Any images generated during the code action execution.")
-    error: Optional[str] = Field(default=None, description="Error message if the code generation or execution failed.")
-    llm_output: str = Field(default='', description="The output from the model after executing the code action.")
-    tool_calls: List[CodeAgentToolCall] = Field(default=[], description="All tool calls made during code generation and execution.")
-
-class CodeAgentActionOutput(BaseModel):
-    """final output from the agent after executing all steps."""
-    result: Any = Field(default=None, description="The final output from the code execution.")
-    is_successful: bool = Field(default=False, description="Indicates whether this is the final answer from the agent.")
-
-class CodeToolResult(BaseModel):
-    # is_successful: bool = Field(default=False, description="Indicates whether the code generation and execution was successful.")
-    # result: Any = Field(default=None, description="The final execution result.")
-    # error: Optional[str] = Field(default='', description="Error message if the code generation or execution failed.")
-    messages: Optional[List] = Field(default=[], description="The messages exchanged during the code generation and execution process.")
-    action_steps: Optional[List[CodeAgentActionStep]] = Field(default=[], description="All action steps taken during code generation and execution.")
-    action_outputs: Optional[List[CodeAgentActionOutput]] = Field(default=[], description="The final output from the agent after executing all steps.")
-    tool_calls: Optional[List[CodeAgentToolCall]] = Field(default=[], description="All tool calls made during code generation and execution.")
-
-    def final_result(self) -> CodeAgentActionOutput:
-        result = self.action_outputs[-1] if self.action_outputs else None
-        return result
-
-# class CodeToolOutput(BaseModel):
-#     output: CodeToolResult = Field(default=None, description="The final output from the code execution.")
-#     messages: List = Field(default=[], description="The messages exchanged during the code generation and execution process.")
-#     tool_calls: List = Field(default=[], description="all tool calls made during code generation and execution.")
 
 
 class CodeTool(BaseTool):
@@ -90,6 +50,10 @@ class CodeTool(BaseTool):
     - Read/write/manipulate files
     - Execute any task that requires Python code
     """
+
+    def __init__(self, config: Config):
+        super().__init__()
+        self.config = config
 
     args_schema: Type[BaseModel] = CodeToolInput
     response_format: Type[BaseModel] = CodeToolResult
@@ -191,11 +155,11 @@ class CodeTool(BaseTool):
                 if self._has_messages(response):
                     result.messages = response.model_input_messages
 
-                if self._is_tool_call(response):
-                    result.tool_calls.append(CodeAgentToolCall(
-                        name=response.name,
-                        arg=response.arguments
-                    ))
+                # if self._is_tool_call(response):
+                #     result.tool_calls.append(CodeAgentToolCall(
+                #         name=response.name,
+                #         arg=response.arguments
+                #     ))
 
                 if self._is_action_step(response):
                     action_step = CodeAgentActionStep(
