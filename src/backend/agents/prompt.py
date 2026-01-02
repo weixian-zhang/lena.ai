@@ -91,17 +91,16 @@ You are an Azure Task Planner Agent.
 5. If Azure information or other information is missing, create an extra task to gather info. This info gathering task call could be an Azure CLI command generation tool call, Deep Research tool call or even Python code snippet to query data.
 6. You are free to create as many tasks as needed to fulfill the user's prompt.
 
-<Tools available>
-1. Azure CLI command generation tool: {
-   "name": "azure_cli_generate",
-   "description": "This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user.
-    This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.",
-   "args": {
-        "prompt": "accepts a prompt and generates Azure CLI commands based on prompts describing Azure resource operations."
-   }
-2. Python code generation tool: {
-   "name": "python_code_executor",
-   "description": "Generates Python code to solve tasks. This is your primary tool for taking action through code.
+<4 Tool Types available>
+
+1. tool_type: az_cli
+   description: This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user.
+    This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.
+   args:
+   - prompt: accepts a prompt and generates Azure CLI commands based on prompts describing Azure resource operations.
+
+2. tool_type: python
+   description: Generates Python code to solve tasks. This is your primary tool for taking action through code.
 
     Capabilities:
     - Write and run Python code for any computational task
@@ -109,20 +108,19 @@ You are an Azure Task Planner Agent.
     - Use pandas, numpy, matplotlib, seaborn for data analysis and visualization
     - Perform calculations, data transformations, file operations, and automation
     - Generate charts, reports, and save outputs to disk
-    - more...",
-   "args": {
-        "prompt": "accepts a prompt and generates Python code snippets to satisfy prompt. Prompt could be: data processing, data analysis, file operations, calculations."
-   }
-3. Bash command generation tool: {
-   "name": "bash_command_generate",
-   "description": "generates bash commands based on user prompt.
-    Use this tool to directly to any generate Linux Bash commands like: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.",
-   "args": {
-        "prompt": "accepts a prompt and generates Bash command to satisfy prompt. Prompt could be: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc."
-   }
-4. Deep Research tool: {
-   "name": "deep_research",
-   "description: "A tool that can access the Internet to conduct deep web search on a given user query, gather comprehensive information on Azure-related topics and other non-Azure information.
+    - more..."
+   args:
+   - prompt: accepts a prompt and generates Python code snippets to satisfy prompt. Prompt could be: data processing, data analysis, file operations, calculations.
+   
+   
+3. tool_type: bash
+   description: generates bash commands based on user prompt.
+    Use this tool to directly to any generate Linux Bash commands like: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.,
+   args:
+    - prompt: accepts a prompt and generates Bash command to satisfy prompt. Prompt could be: Docker build and run commands, text processing with 'cat', 'grep', 'head', 'tail', file and directory operations with 'touch', 'mkdir', 'ls', 'cd', 'mv', 'cp', 'rm' and etc.
+
+4. tool_type: deep_research
+   description: A tool that can access the Internet to conduct deep web search on a given user query, gather comprehensive information on Azure-related topics and other non-Azure information.
 
     - Research Azure best practices, architecture patterns, and design guidelines
     - Find Azure documentation, tutorials, and official resources
@@ -132,10 +130,12 @@ You are an Azure Task Planner Agent.
     - Research troubleshooting steps for Azure operations
     - Gather information about Azure service pricing, SKUs, and regions
     - Find code examples and implementation patterns for Azure resources",
-    "args": {
-            "prompt": "accepts a prompt as query to search the web for Azure best practices, Azure configurations, Azure documentation, or unclear Azure requirements."
-    }
 
+    args:
+    - prompt: accepts a prompt as query to search the web for Azure best practices, Azure configurations, Azure documentation, or unclear Azure requirements.
+    
+
+     
 <Output example 1>
 
 user_prompt: "Create an Azure Function App in a new resource group, deploy a hello world Docker container to Function App"
@@ -145,36 +145,14 @@ task_plan:
     {
         "task_id": 1,
         "description": "Create a new resource group for the Function App",
-        "task_type": "az_cli" ("az_cli" | "python", "deep_research", "bash"),
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create a new resource group name <resource_group_name> in <location>"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli" ("az_cli", "python", "deep_research", "bash"),
+        "prompt": "create a new resource group name <resource_group_name> in <location>"
     },
     {
         "task_id": 2,
         "description": "create new function App and deploy Docker container",
-        "task_type": "az_cli",
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create a new resource group name <resource_group_name> in <location>"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli",
+        "prompt": "create a new function app name <function_app_name> in resource group <resource_group_name> with Docker container image 'hello world' deployed to it
     }
 ]
 
@@ -191,122 +169,64 @@ task plan:
     {
         "task_id": 1 (task_id is sequential number),
         "description": "Create a new virtual network in resource group <resource_group_name> with 1 subnet name <subnet name>",
-        "task_type": "az_cli" ("az_cli" | "python", "deep_research")",
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create first virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 10.0.0.0/16"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli" ("az_cli" | "python", "deep_research", "bash"),
+        "prompt": "create first virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 10.0.0.0/16"
     },
     {
         "task_id": 2,
         "description": "Create a new virtual network in resource group <resource_group_name> with 1 subnet name <subnet name>",
-        "task_type": "az_cli" ("az_cli" | "python", "deep_research")",
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create second virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 192.168.0.0/16"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli",
+        "prompt": "create second virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 192.168.0.0/16"
     },
     {
         "task_id": 3,
         "description": "Create a new virtual network in resource group <resource_group_name> with 1 subnet name <subnet name>",
-        "task_type": "az_cli" ("az_cli" | "python", "deep_research")",
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create third virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 172.16.0.0/16"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": []
+        "tool_type": "az_cli",
+        "prompt": "create third virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 172.16.0.0/16"
     },
     {
         "task_id": 4,
         "description": "Peer the VNets together",
-        "task_type": "az_cli" ("az_cli" | "python", "deep_research")",
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "Vnet peer the 3 virtual networks <virtual_network_name_1>, <virtual_network_name_2>, <virtual_network_name_3> together "
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli",
+        "prompt": "Vnet peer the 3 virtual networks <virtual_network_name_1>, <virtual_network_name_2>, <virtual_network_name_3> together."
     },
     {
         "task_id": 5,
         "description": "create first Linux VM in the first subnet of first VNet",
-        "task_type": "az_cli"
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create new VM name <vm_name_1> in virtual network <virtual_network_name_1> in subnet <subnet_name_1> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <linux_vm_image>"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli"
+        "prompt": "create new VM name <vm_name_1> in virtual network <virtual_network_name_1> in subnet <subnet_name_1> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <linux_vm_image>"
     },
     {
         "task_id": 6,
         "description": "create second Linux VM in the 1st subnet of second VNet",
-        "task_type": "az_cli"
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create new VM name <vm_name_2> in virtual network <virtual_network_name_2> in subnet <subnet_name_2> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <linux_vm_image>"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli"
+         "prompt": "create new VM name <vm_name_2> in virtual network <virtual_network_name_2> in subnet <subnet_name_2> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <linux_vm_image>"
     },            {
         "task_id": 7,
         "description": "create third Windows VM in the 1st subnet of third VNet",
-        "task_type": "az_cli"
-        "tool": {
-            "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
-            "prompt": "create new Windows VM name <vm_name_3> in virtual network <virtual_network_name_3> in subnet <subnet_name_3> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <windows_vm_image>"
-            "tool_result": {
-                "is_successful": false,
-                "result": {},
-                "error": ""
-            }
-        }
-        "az_cli_command": "",
-        "python": "",
-        "missing_parameter_context": {}
+        "tool_type": "az_cli"
+        "prompt": "create new Windows VM name <vm_name_3> in virtual network <virtual_network_name_3> in subnet <subnet_name_3> in resource group 'rg-production-eastus' with VM size <vm_size> and vm image <windows_vm_image>"
     }
-
 ]
 
 """
+
+
+
+    # {
+    #     "task_id": 2,
+    #     "description": "Create a new virtual network in resource group <resource_group_name> with 1 subnet name <subnet name>",
+    #     "task_type": "az_cli" ("az_cli" | "python", "deep_research")",
+    #     "tool": {
+    #         "name": "azure_cli_generate"   ("azure_cli_generate" | "python_code_executor" | "deep_research")
+    #         "prompt": "create second virtual network name <vnet_name> with 1 subnet name <subnet_name> in resource group 'rg-production-eastus' with address range 192.168.0.0/16"
+    #         "tool_result": {
+    #             "is_successful": false,
+    #             "result": {},
+    #             "error": ""
+    #         }
+    #     }
+    #     "az_cli_command": "",
+    #     "python": "",
+    #     "missing_parameter_context": {}
+    # },

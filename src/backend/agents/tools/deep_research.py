@@ -1,5 +1,6 @@
 import asyncio
-from pydantic import BaseModel
+from typing import Type
+from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureOpenAIChatClient
@@ -14,33 +15,26 @@ from agent_framework import (
 # from dotenv import load_dotenv
 # load_dotenv()
 
-class DeepResearchResult(BaseModel):
-    result: str
+class DeepResearchToolResult(BaseModel):
+    result: str = Field(description="The result of the deep web research.")
 
-class DeepResearchInput(BaseModel):
-    query: str = "The user query to research on the Internet."
+class DeepResearchToolInput(BaseModel):
+    query: str = Field(description="The user query for deep web research.")
 
 class DeepResearchTool(BaseTool):
     name: str = "deep_research_tool"
     description: str = "A tool that can access the Internet to conduct deep web search on a given user query using web searches and information gathering."
-    args_schema = DeepResearchInput
-    metadata: dict = {}
-    """The tool response format.
-
-    If `'content'` then the output of the tool is interpreted as the contents of a
-    `ToolMessage`. If `'content_and_artifact'` then the output is expected to be a
-    two-tuple corresponding to the `(content, artifact)` of a `ToolMessage`.
-    """
-    response_format = 'content'
+    args_schema: Type[BaseModel] = DeepResearchToolInput
+    response_format: Type[BaseModel] = DeepResearchToolResult
 
 
-    def _run(self, prompt: str) -> DeepResearchResult:
+    def _run(self, prompt: str) -> DeepResearchToolResult:
         """The synchronous method that the agent will call."""
         # This is where your custom logic or API call goes
         raise NotImplementedError("Synchronous execution is not implemented. Please use the asynchronous method '_arun'.")
 
 
-    async def _arun(self, prompt: str) -> DeepResearchResult:
+    async def _arun(self, prompt: str) -> DeepResearchToolResult:
         """The asynchronous method for the tool (optional)."""
 
         researcher_agent = ChatAgent(
@@ -84,7 +78,7 @@ class DeepResearchTool(BaseTool):
         stream_line_open: bool = False
         output: str | None = None
 
-        async for event in workflow.run_stream(task_1):
+        async for event in workflow.run_stream(prompt):
             if isinstance(event, AgentRunUpdateEvent):
                 props = event.data.additional_properties if event.data else None
                 event_type = props.get("magentic_event_type") if props else None
@@ -121,18 +115,13 @@ class DeepResearchTool(BaseTool):
         if output is not None:
             print(f"Workflow completed with result:\n\n{output}")
 
-        return DeepResearchResult(result=output if output else "")
+        return DeepResearchToolResult(result=output if output else "")
     
 
-# async def main():
-#     # wsr: WebSearchResult = await agent.run()
-#     # print(wsr.result)
+async def main():
+    dst = DeepResearchTool()
+    result = await dst._arun("Research the latest advancements in AI for healthcare.")
+    print(f"Deep Research Result: {result.result}")
 
-#     # tavily_search()
-
-#     #await search_azure_doc()
-
-#     await magentic_deep_research()
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -104,9 +104,9 @@ class AzShell(BaseTool):
             stdout, stderr = process.communicate(timeout=timeout)
 
             shell_result = AzShellToolResult(
-                success=True if not stderr else False,
+                is_successful=True if not stderr else False,
                 stdout=stdout,
-                stderr=stderr
+                error=stderr
             )
 
             return shell_result
