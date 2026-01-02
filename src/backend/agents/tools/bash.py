@@ -71,7 +71,7 @@ class BashTool(BaseTool):
 
             chain = messages | llm
 
-            output: BashToolOutput = chain.invoke({})
+            output: BashToolStructuredOutput = chain.invoke({})
 
             bash_commands = output.commands
 
