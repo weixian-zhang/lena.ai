@@ -15,8 +15,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from typing import Any, Dict
 import asyncio
 
+
 class UserPromptOptimizerStructuredOutput(BaseModel):
     optimized_prompt: str
+
 
 class TaskPlanner:
     
@@ -48,6 +50,7 @@ class TaskPlanner:
             'execution_state': execution_state,
             'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
         }
+    
     
     def optimize_user_prompt(self, execution_state: ExecutionState) -> str:
         llm : AzureChatOpenAI = Util.gpt_4o()
@@ -90,8 +93,6 @@ class TaskPlanner:
     async def _generate_az_cli_bash_commands_from_prompt(self, task_plan: TaskPlan) -> str:
         
         for task in task_plan.tasks:  
-            
-            # "az_cli" | "python", "deep_research", "bash"
 
             if task.task_type == 'az_cli':
                 az_cli_tool = AzCliTool()
