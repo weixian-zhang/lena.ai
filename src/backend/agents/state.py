@@ -153,6 +153,7 @@ class Scratchpad(BaseModel):
    scratchpad used by multi-agents to record notes and observations
     """
     original_prompt: str = Field(default="", description="The prompt describing the task to be accomplished")
+    optimized_prompt: str = Field(default="", description="The optimized prompt after processing the original prompt")
     resolved_prompt: str = Field(default="", description="The resolved prompt with resolved Azure resource values")
     #missing_azure_values_in_prompt: MissingAzureValuesInPrompt = Field(default=MissingAzureValuesInPrompt(), description="A dictionary containing the missing information filled in by the user")
     #notes: dict = Field(default={}, description="A dict to hold general info or observations during workflow execution")
@@ -162,5 +163,6 @@ class Scratchpad(BaseModel):
 from config import Config
 class ExecutionState(BaseModel):
     username: str = Field(default="", description="The username of the person initiating the agent")
+    tread_id: str = Field(default="", description="The LangGraph thread id associated with this execution")
     scratchpad: Scratchpad = Field(default=Scratchpad(), description="The scratchpad for temporary notes and observations")
     messages: Annotated[list[BaseMessage], Field(default=[], description="Conversation history"), add_messages]
