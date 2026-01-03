@@ -1,11 +1,11 @@
 from langchain_openai import AzureChatOpenAI
+from pydantic import BaseModel
 from state import ExecutionState
 from utils import Util
 from state import Task
-from agents.prompt import task_planner_system_prompt
-from agents.tools.az_cli import AzCliTool, AzureCliToolInput, AzCliToolCodeResult
-from agents.tools.bash import BashTool, BashToolInput, BashToolCodeResult
-from agents.tools.code import CodeTool
+from agents.prompt import task_planner_system_prompt, task_planner_prompt_optimizer
+from agents.tools.az_cli import AzCliTool, AzCliToolCodeResult
+from agents.tools.bash import BashTool, BashToolCodeResult
 from agents.state import (ExecutionState,
                           TaskPlannerOutput, TaskPlan, Task,
                           AzCliToolCodeResult,
@@ -15,16 +15,22 @@ from langchain_core.prompts import ChatPromptTemplate
 from typing import Any, Dict
 import asyncio
 
+class UserPromptOptimizerStructuredOutput(BaseModel):
+    optimized_prompt: str
+
 class TaskPlanner:
     
     def plan_tasks(self, execution_state: ExecutionState) -> Dict[str, Any]:
+
+        assert execution_state.scratchpad.optimized_prompt is not None, "Optimized prompt is required"
+
         llm : AzureChatOpenAI = Util.gpt_4o()
         llm = llm.with_structured_output(TaskPlannerOutput)
         
         messages = ChatPromptTemplate.from_messages(
             [
                 SystemMessage(content=task_planner_system_prompt),
-                HumanMessage(content=execution_state.scratchpad.original_prompt)
+                HumanMessage(content=execution_state.scratchpad.optimized_prompt)
             ]   
         )
 
@@ -41,6 +47,30 @@ class TaskPlanner:
         return {
             'execution_state': execution_state,
             'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
+        }
+    
+    def optimize_user_prompt(self, execution_state: ExecutionState) -> str:
+        llm : AzureChatOpenAI = Util.gpt_4o()
+        llm = llm.with_structured_output(UserPromptOptimizerStructuredOutput)
+
+        messages = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(content=task_planner_prompt_optimizer),
+                HumanMessage(content=execution_state.scratchpad.original_prompt)
+            ]   
+        )
+
+        chain = messages | llm
+
+        output: UserPromptOptimizerStructuredOutput = chain.invoke({})
+
+        optimized_prompt = output.optimized_prompt
+
+        execution_state.scratchpad.optimized_prompt = optimized_prompt
+
+        return {
+            'execution_state': execution_state,
+            'messages': [AIMessage(content='optimized_prompt: ' + optimized_prompt)]
         }
     
 

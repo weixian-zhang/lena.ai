@@ -23,7 +23,9 @@ class AzureWorkflow:
         self.workflow = StateGraph(ExecutionState)
 
         self.workflow.add_node("plan_tasks", self.task_planner.plan_tasks)
-        self.workflow.add_edge(START, "plan_tasks")
+        self.workflow.add_node("optimize_prompt", self.task_planner.optimize_user_prompt)
+        self.workflow.add_edge(START, "optimize_prompt")
+        self.workflow.add_edge("optimize_prompt", "plan_tasks")
         self.workflow.add_edge("plan_tasks", END)
         # self.workflow.add_node("check_for_missing_azure_values", self.value_resolver_agent.check_for_missing_azure_values)
         # self.workflow.add_node("check_with_human_on_missing_values", self.value_resolver_agent.check_with_human_on_missing_values)
@@ -70,7 +72,7 @@ if __name__ == "__main__":
     from config import Config
     config = Config()
 
-    graph_config = {"configurable": {"thread_id": '1'}} #str(uuid.uuid4())}}
+    
 
     workflow = AzureWorkflow()
     graph = workflow.build_graph()
@@ -82,12 +84,23 @@ if __name__ == "__main__":
     2. peer the 3 VNets together.
     3. create 3 VMs one in each subnet, 2 Linux VMs and 1 Windows VM."""
 
+    prompt_app_1 = """
+    1. create a 3.13 python Fast API app with single route /health returning "OK". Write a Docker file for it.
+    2. create 
+    1. The front-end should be hosted on Azure App Service.
+    2. The back-end should be hosted on Azure Functions.
+    3. The database should be an Azure SQL Database."""
+
+    thread_id = "1"
+    graph_config = {"configurable": {"thread_id": thread_id}} #str(uuid.uuid4())}}
+
     username = 'admin@MngEnvMCAP049172.onmicrosoft.com'
-    agent_working_dir = os.path.join(config.agent_cwd, username)
+    agent_working_dir = os.path.join(config.agent_cwd, username, thread_id)
     config.ensure_cwd_exists(agent_working_dir)
 
     state = ExecutionState(
         username = username,
+        thread_id = thread_id,
         environment_config=config,
         scratchpad = Scratchpad(
             original_prompt = prompt_2
