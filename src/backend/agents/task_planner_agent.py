@@ -2,12 +2,12 @@ from langchain_openai import AzureChatOpenAI
 from pydantic import BaseModel
 from state import ExecutionState
 from utils import Util
-from state import Task
+from state import TaskType, AzCliTask, BashTask, PythonTask, DeepResearchTask
 from agents.prompt import task_planner_system_prompt, task_planner_prompt_optimizer
 from agents.tools.az_cli import AzCliTool, AzCliToolCodeResult
 from agents.tools.bash import BashTool, BashToolCodeResult
 from agents.state import (ExecutionState,
-                          TaskPlannerOutput, TaskPlan, Task,
+                          TaskPlannerOutput, TaskPlan, AzCliTaskCommandParameterResult, BashTaskCommandParameterResult,
                           AzCliToolCodeResult,
                           BashToolCodeResult)
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -47,8 +47,8 @@ class TaskPlanner:
         execution_state.scratchpad.task_plan = task_plan
 
         return {
-            'execution_state': execution_state,
-            'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
+            'execution_state': execution_state
+            # 'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
         }
     
     
@@ -79,27 +79,63 @@ class TaskPlanner:
 
     def _create_task_plan_from_output(self, task_planner_output: TaskPlannerOutput) -> TaskPlan:
         task_plan = TaskPlan()
-        for task_output in task_planner_output.tasks:
-            task = Task(
-                task_id=task_output.task_id,
-                description=task_output.description,
-                task_type=task_output.task_type,
-                prompt=task_output.prompt
-            )
+        for planner_task in task_planner_output.tasks:
+            
+            task = None
+
+            if planner_task.task_type == TaskType.AZ_CLI:
+                task = AzCliTask(
+                    task_id=planner_task.task_id,
+                    description=planner_task.description,
+                    task_type=planner_task.task_type,
+                    prompt=planner_task.prompt
+                )
+            elif planner_task.task_type == TaskType.BASH:
+                task = BashTask(
+                    task_id=planner_task.task_id,
+                    description=planner_task.description,
+                    task_type=planner_task.task_type,
+                    prompt=planner_task.prompt
+                )
+            elif planner_task.task_type == TaskType.PYTHON:
+                task = PythonTask(
+                    task_id=planner_task.task_id,
+                    description=planner_task.description,
+                    task_type=planner_task.task_type,
+                    prompt=planner_task.prompt
+                )
+            elif planner_task.task_type == TaskType.DEEP_RESEARCH:
+                task = DeepResearchTask(
+                    task_id=planner_task.task_id,
+                    description=planner_task.description,
+                    task_type=planner_task.task_type,
+                    prompt=planner_task.prompt
+                )
             task_plan.tasks.append(task)
+
         return task_plan
     
 
     async def _generate_az_cli_bash_commands_from_prompt(self, task_plan: TaskPlan) -> str:
-        
+        i = 0
         for task in task_plan.tasks:  
+
+            if i == 1:
+                break
+            i += 1
 
             if task.task_type == 'az_cli':
                 az_cli_tool = AzCliTool()
                 result: AzCliToolCodeResult = await az_cli_tool.arun({'prompt': task.prompt})
-                task.az_cli_commands = result.commands
+                for command in result.commands:
+                    task.commands.append(AzCliTaskCommandParameterResult(
+                        command=command
+                    ))
 
             elif task.task_type == 'bash':
                 bash_tool = BashTool()
                 result: BashToolCodeResult = await bash_tool.arun({'prompt': task.prompt})
-                task.bash_commands = result.commands
+                for command in result.commands:
+                    task.commands.append(BashTaskCommandParameterResult(
+                        command=command
+                    ))

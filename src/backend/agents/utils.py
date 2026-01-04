@@ -1,6 +1,7 @@
 from langchain_openai import AzureChatOpenAI
 import os
 import sys
+from pathlib import Path
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
@@ -23,3 +24,17 @@ class Util:
     def import_parent_dir_module(current_file_dunder: str):
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(current_file_dunder), '..'))
         sys.path.insert(0, parent_dir)
+
+    @staticmethod
+    def ensure_dir_exists(path: str):
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def set_agent_working_dir( root_agent_cwd: str, username: str, thread_id: str) -> str:
+        """
+        :param root_agent_cwd: the root agent working directory set in environment variable
+        """
+        agent_working_dir = os.path.join(root_agent_cwd, username, thread_id)
+        Util.ensure_dir_exists(agent_working_dir)
+        return agent_working_dir

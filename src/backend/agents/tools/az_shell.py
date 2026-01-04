@@ -12,7 +12,7 @@ import subprocess
 import os, sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
-from state import AzShellToolInput, AzShellToolResult
+from state import AzShellToolInput, AzShellToolExecutionResult
 
 load_dotenv()
 
@@ -36,7 +36,7 @@ class AzShell(BaseTool):
     Use this tool to directly execute commands on Azure cloud or local system. No authentication needed - shell is already logged into Azure.
     """
     args_schema: Type[BaseModel] = AzShellToolInput
-    response_format: Type[BaseModel] = AzShellToolResult
+    response_format: Type[BaseModel] = AzShellToolExecutionResult
 
     # def __init__(self):
     #     self.client_id = os.getenv("AZURE_CLIENT_ID")
@@ -103,7 +103,7 @@ class AzShell(BaseTool):
             
             stdout, stderr = process.communicate(timeout=timeout)
 
-            shell_result = AzShellToolResult(
+            shell_result = AzShellToolExecutionResult(
                 is_successful=True if not stderr else False,
                 stdout=stdout,
                 error=stderr
