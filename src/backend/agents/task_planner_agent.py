@@ -25,7 +25,9 @@ class TaskPlanner:
     def plan_tasks(self, execution_state: ExecutionState) -> Dict[str, Any]:
 
         assert execution_state.scratchpad.optimized_prompt is not None, "Optimized prompt is required"
-
+        
+        scratchpad = execution_state.scratchpad
+        
         llm : AzureChatOpenAI = Util.gpt_4o()
         llm = llm.with_structured_output(TaskPlannerOutput)
         
@@ -44,10 +46,10 @@ class TaskPlanner:
 
         asyncio.run(self._generate_az_cli_bash_commands_from_prompt(task_plan))
 
-        execution_state.scratchpad.task_plan = task_plan
+        scratchpad.task_plan = task_plan
 
         return {
-            'execution_state': execution_state
+            'scratchpad': scratchpad
             # 'messages': [AIMessage(content=task_plan.model_dump_json(indent=2))]
         }
     

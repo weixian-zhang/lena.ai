@@ -119,7 +119,7 @@ if __name__ == "__main__":
         )
     )
     
-    result = graph.invoke(input={'execution_state': state}, config=graph_config)
+    result = graph.invoke(input=state, config=graph_config)
 
     pass
     # yes, missing_values = workflow.is_missing_values_for_human_input(result)

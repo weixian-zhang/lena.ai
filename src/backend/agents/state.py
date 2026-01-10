@@ -161,20 +161,20 @@ class BashTask(Task):
 
 class DeepResearchTask(Task):
     query: str = Field(default="", description="The user query for deep web research")
-    deep_research_result: Optional[DeepResearchToolExecutionResult] = Field(default=DeepResearchToolExecutionResult(), description="The result of the deep web research for this task")
+    execution_result: Optional[DeepResearchToolExecutionResult] = Field(default=DeepResearchToolExecutionResult(), description="The result of the deep web research for this task")
 
 
 class TaskPlan(BaseModel):
     tasks: List[Task] = Field(default=[], description="List of tasks in the execution plan")
     
-    def task_results(self) -> Dict[str, Any]:
-        results = {}
-        for task in self.tasks:
-            if task.tool and task.tool.tool_result:
-                tool_result: Dict[str, str] = task.tool.tool_result.result if task.tool.tool_result.result else {}
-                results_key = task.task_id
-                results[results_key] = tool_result
-        return results
+    # def task_results(self) -> Dict[str, Any]:
+    #     results = {}
+    #     for task in self.tasks:
+    #         if task.tool and task.tool.tool_result:
+    #             tool_result: Dict[str, str] = task.tool.tool_result.result if task.tool.tool_result.result else {}
+    #             results_key = task.task_id
+    #             results[results_key] = tool_result
+    #     return results
 
 
 # class ExecutionConfig(BaseModel):
@@ -195,7 +195,6 @@ class Scratchpad(BaseModel):
     task_plan: TaskPlan = Field(default=TaskPlan(), description="The execution plan containing all tasks")
 
 
-from config import Config
 class ExecutionState(BaseModel):
     username: str = Field(default="", description="The username of the person initiating the agent")
     tread_id: str = Field(default="", description="The LangGraph thread id associated with this execution")
