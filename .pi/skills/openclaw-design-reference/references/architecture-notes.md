@@ -1,8 +1,8 @@
 # OpenClaw Architecture Notes (Reference / Opinion)
 
 These notes distill how OpenClaw structures a chat-agent runtime. Use them as
-**prior art to reason against** while designing lena.ai — not as a blueprint to
-copy. Every section ends with a lena.ai-oriented take.
+**prior art to reason against** while designing lena.azure — not as a blueprint to
+copy. Every section ends with a lena.azure-oriented take.
 
 Source of truth: `/Users/weixianzhang/projects/open_source/openclaw`
 (read `docs/concepts/*.md` and `packages/agent-core/src/` for specifics).
@@ -29,7 +29,7 @@ OpenClaw separates concerns into distinct layers:
 It depends on narrow contracts (a stream function, tool interfaces, a session
 store).
 
-**lena.ai take:** adopt the core/provider/transport split even at small scale —
+**lena.azure take:** adopt the core/provider/transport split even at small scale —
 it keeps the loop testable. You likely do NOT need a plugin SDK, a multi-package
 monorepo, or a gateway-protocol codegen layer on day one. Start with a single
 package that internally keeps these as folders/modules with clean interfaces.
@@ -55,7 +55,7 @@ Key properties:
   (See `packages/agent-core/src/types.ts` `StreamFn` doc.)
 - **Tool execution modes:** `sequential` vs `parallel` per assistant message.
 
-**lena.ai take:** the event-stream + per-session serialization model is worth
+**lena.azure take:** the event-stream + per-session serialization model is worth
 copying conceptually. The failure-as-events contract is a genuinely good idea —
 it avoids half-streamed error states. Parallel tool execution can wait until you
 have a real need.
@@ -74,7 +74,7 @@ From `docs/concepts/context.md`:
 - Skills are listed as metadata only; full instructions are read on demand — a
   deliberate trick to keep the window lean.
 
-**lena.ai take:** build context accounting in from the start, even if you don't
+**lena.azure take:** build context accounting in from the start, even if you don't
 expose a `/context` UI. Knowing where tokens go is the difference between a cheap
 agent and a runaway one. The "list capability, load details on demand" pattern
 is a strong default for tools/skills/docs.
@@ -91,10 +91,10 @@ From `docs/concepts/system-prompt.md` + `docs/concepts/agent.md`:
   "Project Context" section.
 - Large injected files are truncated per-file and capped in total.
 
-**lena.ai take:** centralize prompt assembly in ONE function/module that is pure
+**lena.azure take:** centralize prompt assembly in ONE function/module that is pure
 and deterministic given session state. Do not let prompt fragments leak across
 the codebase. The bootstrap-files idea (user-editable persona/memory files) is a
-nice UX pattern if lena.ai wants a customizable persona.
+nice UX pattern if lena.azure wants a customizable persona.
 
 ---
 
@@ -125,14 +125,14 @@ From `docs/concepts/session.md` + `docs/concepts/agent-loop.md` +
 - Sessions expire by **daily reset** (default 4AM), optional **idle reset**, or
   manual `/new` · `/reset`. Freshness tracks real user turns, not system writes.
 
-**lena.ai take:** JSONL append-only transcripts are simple and debuggable — a
+**lena.azure take:** JSONL append-only transcripts are simple and debuggable — a
 good default. The **tree/leaf model is worth adopting even if you never expose
 forking**, because it makes compaction and "edit-and-retry" clean instead of
 mutating a flat array. Put storage behind an interface (disk + in-memory) from
 day one for testability. A write lock matters once you have concurrent writers;
-if lena.ai is single-process you can start with an in-process queue and add file
+if lena.azure is single-process you can start with an in-process queue and add file
 locking only if needed. Pick your `dmScope` default deliberately if more than
-one user can talk to lena.ai.
+one user can talk to lena.azure.
 
 ---
 
@@ -146,7 +146,7 @@ From `docs/concepts/compaction.md` + `docs/concepts/context.md`:
   transcript stays complete.
 - Compaction can be delegated to a pluggable "context engine".
 
-**lena.ai take:** distinguish "what persists" (transcript) from "what's in the
+**lena.azure take:** distinguish "what persists" (transcript) from "what's in the
 window" (prompt). Start with simple threshold-based compaction; the pluggable
 context-engine abstraction is premature unless you need swappable strategies.
 
@@ -163,9 +163,9 @@ From `docs/concepts/streaming.md` + `docs/concepts/queue-steering.md`:
   assistant turn's tool calls finish, before the next model call. Alternatives:
   followup / collect / interrupt.
 
-**lena.ai take:** block streaming + chunking is a UX refinement — get raw delta
+**lena.azure take:** block streaming + chunking is a UX refinement — get raw delta
 streaming working first. Steering is powerful but complex; only build it if
-lena.ai users will realistically interrupt in-flight runs.
+lena.azure users will realistically interrupt in-flight runs.
 
 ---
 
@@ -180,7 +180,7 @@ From `docs/concepts/agent-loop.md` (hook points) + `src/agents/agent-tools*.ts`:
 - `before_tool_call: { block: true }` is terminal; `{ block: false }` is a no-op
   (can't un-block) — a clean, predictable decision rule.
 
-**lena.ai take:** a small, explicit tool-policy + hook seam is worth having early
+**lena.azure take:** a small, explicit tool-policy + hook seam is worth having early
 — it centralizes safety/approval logic. You don't need the full breadth of
 OpenClaw's hook catalog; start with `before_tool_call` (gate) and `after_tool_call`
 (observe/transform).
@@ -215,7 +215,7 @@ directly, it receives capability interfaces:
 - `getApiKeyAndHeaders(model)` injects auth lazily per model, keeping secrets out
   of the loop.
 
-**lena.ai take:** this is the single most transferable idea for keeping a chat
+**lena.azure take:** this is the single most transferable idea for keeping a chat
 agent testable. Define **narrow capability interfaces** (`ExecutionEnv`,
 `SessionStorage`, a resources provider) and pass them in. The `Result`-instead-of-throw
 convention for env ops is worth adopting — it kills an entire class of unhandled
@@ -244,7 +244,7 @@ From `docs/channels/channel-routing.md` + `src/channels/` +
   draft/progress streaming, thread bindings.
 - **Broadcast groups** can fan one inbound message to multiple agents.
 
-**lena.ai take:** even if lena.ai starts with a single web chat channel, model
+**lena.azure take:** even if lena.azure starts with a single web chat channel, model
 the **channel as an interface** (receive → normalized inbound event; send →
 normalized outbound) and keep routing deterministic and outside the model. The
 **session-key-as-routing-bucket** idea is the clean way to get isolation and
@@ -271,7 +271,7 @@ From `docs/concepts/architecture.md` + `docs/gateway/protocol.md`:
 - Events are **not replayed**; clients refresh on gaps. Runs are acknowledged
   immediately (`{runId, status:"accepted"}`) then streamed.
 
-**lena.ai take:** only build a gateway if lena.ai serves multiple
+**lena.azure take:** only build a gateway if lena.azure serves multiple
 channels/clients. For a single web UI, a plain HTTP + SSE (or one WebSocket
 endpoint) is enough. But keep the *principles*: **transport separate from agent
 logic**, **ack-then-stream** for long runs, **idempotency keys** on
@@ -281,9 +281,9 @@ native clients.
 
 ---
 
-## Adopt / Simplify / Skip — quick table for lena.ai
+## Adopt / Simplify / Skip — quick table for lena.azure
 
-| OpenClaw pattern | Recommendation for lena.ai |
+| OpenClaw pattern | Recommendation for lena.azure |
 |------------------|----------------------------|
 | Core/provider/transport module split | **Adopt** (as folders, not packages) |
 | Event-stream loop, failure-as-events | **Adopt** |
@@ -314,7 +314,7 @@ native clients.
 
 ## Reminder
 
-When you pull an idea from here into lena.ai, **write original code** that fits
-lena.ai's own naming and boundaries, and **cite the OpenClaw file** you learned
-it from so the reasoning is traceable. OpenClaw is the opinion; lena.ai's
+When you pull an idea from here into lena.azure, **write original code** that fits
+lena.azure's own naming and boundaries, and **cite the OpenClaw file** you learned
+it from so the reasoning is traceable. OpenClaw is the opinion; lena.azure's
 requirements are the decision-maker.

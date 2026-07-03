@@ -17,16 +17,16 @@ description: "Reference the OpenClaw open-source codebase for architecture and m
 
 > **PURPOSE — READ FIRST**
 >
-> This skill helps design a **custom chat agent** (the `lena.ai` project) by
+> This skill helps design a **custom chat agent** (the `lena.azure` project) by
 > studying the **OpenClaw** codebase as a mature, real-world reference
 > implementation.
 >
 > **OpenClaw is a reference, not a template.**
 > - Treat its choices as **one informed opinion**, not the answer.
 > - **Do NOT copy** its code, structure, or file layout wholesale.
-> - Extract *principles* and *tradeoffs*, then adapt to lena.ai's own goals,
+> - Extract *principles* and *tradeoffs*, then adapt to lena.azure's own goals,
 >   scale, and constraints.
-> - When OpenClaw's approach is over-engineered for lena.ai, say so and propose
+> - When OpenClaw's approach is over-engineered for lena.azure, say so and propose
 >   a simpler alternative.
 
 ## Reference repo location
@@ -70,17 +70,17 @@ explain *why*. Read the specific file with the `read` tool:
 
 ## How to use this skill in a design conversation
 
-1. **Clarify lena.ai's requirement first.** Scale, channels, single vs multi
+1. **Clarify lena.azure's requirement first.** Scale, channels, single vs multi
    user, hosted vs local, latency needs. Design follows requirements, not
    OpenClaw.
 2. **Locate the analogous concern in OpenClaw.** Use the tables above; read the
    matching `docs/concepts/*.md`, then the source only if needed.
 3. **Summarize OpenClaw's approach as an opinion** — the pattern, and the
    tradeoffs it accepts.
-4. **Recommend for lena.ai explicitly.** State whether to adopt, simplify, or
-   diverge, and why. Call out where OpenClaw is heavier than lena.ai needs.
+4. **Recommend for lena.azure explicitly.** State whether to adopt, simplify, or
+   diverge, and why. Call out where OpenClaw is heavier than lena.azure needs.
 5. **Never paste OpenClaw source.** Describe the idea; write fresh code that
-   fits lena.ai's own module boundaries and naming.
+   fits lena.azure's own module boundaries and naming.
 
 ## Distilled design principles (see references for detail)
 
@@ -106,13 +106,13 @@ OpenClaw's architecture, read as opinion:
 - **Transport/gateway is separate from agent logic.** A single WebSocket gateway
   owns all channels; the agent runtime is a distinct concern behind it. → §11
 
-Full notes and a lena.ai-oriented "adopt / simplify / skip" table:
+Full notes and a lena.azure-oriented "adopt / simplify / skip" table:
 [`references/architecture-notes.md`](./references/architecture-notes.md)
 
 ## Guardrails
 
 - OpenClaw is large and production-hardened for many channels and providers.
-  lena.ai likely needs a **fraction** of it — resist importing its complexity.
+  lena.azure likely needs a **fraction** of it — resist importing its complexity.
 - Cite the specific OpenClaw file you drew a pattern from so the user can verify.
 - If a pattern's rationale isn't clear from the docs, read the source before
   asserting it; do not guess.
