@@ -1,5 +1,5 @@
 ---
-name: pi-mono-reference
+name: pi-design-reference
 description: Reference the Pi mono repo open-source codebase for architecture and module-design ideas when building a custom chat agent (the lena.azure project). Use the Pi Mono harness as an OPINION and prior art to compare against — NOT as a design to copy verbatim. ONLY use this skill when the user explicitly mentions the trigger keyword 'ref-pi'. Do NOT activate on general chat-agent design questions unless 'ref-pi' is present in the request. WHEN: ref-pi.
 ---
 
