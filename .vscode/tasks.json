@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "src/backend",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "build backend",
+			"detail": "tsc -p tsconfig.json"
+		}
+	]
+}

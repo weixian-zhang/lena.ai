@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import type { AgentEvent } from "@mariozechner/pi-agent-core";
-import { createPiAgent } from "./agent.js";
+import { createPiAgent } from "./agent/agent.js";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
-import { tools } from "./tools/index.js";
+import { tools } from "./agent/tools/index.js";
 
 /**
  * Minimal entrypoint: take a single prompt (CLI args or stdin), run one agent turn,
