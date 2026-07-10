@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import type { AgentEvent } from "@mariozechner/pi-agent-core";
 import { createPiAgent } from "./agent/agent.js";
-import { SYSTEM_PROMPT } from "./system-prompt.js";
+import { SYSTEM_PROMPT } from "./agent/prompt/system-prompt.js";
 import { tools } from "./agent/tools/index.js";
 
 /**

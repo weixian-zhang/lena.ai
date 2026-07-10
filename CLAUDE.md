@@ -22,6 +22,11 @@ End-to-end execution: resource search, data analysis, ETL, deploy, Sentinel thre
   conventions, not following them. Prior discarded approach: git history of
   `feat/task_runner_overseer`.
 
+## Code comments
+
+Keep them short — a one or two line note on the gist is enough. Comment the non-obvious "why",
+not the "what"; don't restate the code or write essay-length block headers.
+
 ## Where the design lives (read before building)
 
 Little code exists; architecture = reference repos + skills + eval specs.

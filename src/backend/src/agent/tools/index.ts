@@ -1,4 +1,5 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
+import { azureCliGenerateTool } from "./azure-cli/azure-cli.js";
 import { bashTool } from "./bash/bash.js";
 
 /**
@@ -9,6 +10,8 @@ import { bashTool } from "./bash/bash.js";
  * and expose NO delete/remove capability — deletion is gated out by design.
  *
  * `bash` is the primary surface: a single shell with the Azure CLI pre-authenticated.
- * Narrower typed tools (e.g. Resource Graph) land alongside it as needs arise.
+ * `azure_cli_generate` turns a natural-language intent into the exact `az` command
+ * (via Azure's own MCP server) for `bash` to then run. Narrower typed tools (e.g.
+ * Resource Graph) land alongside them as needs arise.
  */
-export const tools: AgentTool[] = [bashTool];
+export const tools: AgentTool[] = [bashTool, azureCliGenerateTool];

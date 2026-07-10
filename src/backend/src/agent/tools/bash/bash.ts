@@ -1,8 +1,9 @@
 import { mkdir, mkdtemp } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { type Static, Type } from "typebox";
+import { lenaHome } from "../../../cwd.js";
 import { MAX_OUTPUT_BYTES, runShell } from "./shell.js";
 
 // ---------------------------------------------------------------------------
@@ -10,7 +11,7 @@ import { MAX_OUTPUT_BYTES, runShell } from "./shell.js";
 // ---------------------------------------------------------------------------
 
 /** Persistent working directory for agent commands: `~/.lena/bash`. */
-const WORKDIR = join(homedir(), ".lena", "bash");
+const WORKDIR = lenaHome("bash");
 
 interface AzureSession {
   /** Environment carrying a per-session `AZURE_CONFIG_DIR` + PATH/secrets. */
