@@ -14,14 +14,14 @@ try {
 }
 
 /**
- * Runtime configuration for Lena.
+ * Microsoft Foundry connection settings.
  *
  * Authentication is via managed identity (see {@link createManagedIdentityTokenProvider})
  * — no API key is stored, resolved, or rotated. Only the Foundry endpoint and deployment
  * name are read from the environment, so a deployment can be repointed without a code
  * change. See docs/environment_packages.md for the canonical vars.
  */
-interface LenaConfig {
+interface FoundryConfig {
   /** Foundry endpoint URL serving the OpenAI-compatible API. */
   endpoint: string;
   /** Model deployment name sent as the `model` field in each request. */
@@ -48,7 +48,7 @@ function getEnv(name: string, fallbacks: string[] = []): string {
  * canonical vars (see .env); the `AI_FOUNDRY_*` and `LENA_MODEL_*` aliases let a
  * deployment override without touching the Foundry-specific names.
  */
-function loadConfig(): LenaConfig {
+function loadConfig(): FoundryConfig {
   const endpoint = getEnv("MICROSOFT_FOUNDRY_ENDPOINT", [
     "AI_FOUNDRY_DEPLOYMENT_ENDPOINT",
     "LENA_MODEL_BASE_URL",
