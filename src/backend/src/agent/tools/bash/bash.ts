@@ -10,8 +10,8 @@ import { MAX_OUTPUT_BYTES, runShell } from "./shell.js";
 // Azure session — one authenticated, isolated CLI login shared by every call.
 // ---------------------------------------------------------------------------
 
-/** Persistent working directory for agent commands: `~/.lena/bash`. */
-const WORKDIR = lenaHome("bash");
+/** Persistent working directory for agent commands: `~/.lena/work`. */
+const WORKDIR = lenaHome("work");
 
 interface AzureSession {
   /** Environment carrying a per-session `AZURE_CONFIG_DIR` + PATH/secrets. */
@@ -83,10 +83,7 @@ async function createSession(): Promise<AzureSession> {
 
 const schema = Type.Object({
   command: Type.String({
-    description:
-      "The bash command to run. The Azure CLI (`az`) is already authenticated against " +
-      "the target subscription — run `az ...` directly. Prefer `az ... -o json` for output " +
-      "you need to parse.",
+    description: "The bash command to run. Use `-o json` for `az` output you need to parse.",
   }),
   timeout: Type.Optional(
     Type.Number({ description: "Timeout in seconds. Omit for no timeout." }),
@@ -111,8 +108,8 @@ const DELETION_PATTERN =
 
 /**
  * Lena's single execution surface: run a bash command with the Azure CLI
- * pre-authenticated (see {@link getAzureSession}). One tool rather than a
- * separate `az` tool — `az` is just a binary in the same shell, and a single
+ * pre-authenticated (see {@link getAzureSession}). One tool rather than separate
+ * `az` / `node` tools — both are just binaries in this same shell, and a single
  * choke point means the delete gate and (future) HITL confirmation live in
  * exactly one place. See CLAUDE.md ("Tools = the Azure surface").
  *
@@ -124,10 +121,11 @@ export const bashTool: AgentTool<typeof schema> = {
   name: "bash",
   label: "bash",
   description:
-    "Execute a bash command on the Lena host. The Azure CLI (`az`) is pre-authenticated " +
-    "against the target subscription. Use it for resource search, provisioning, data analysis, " +
-    "ETL, deploys, and Sentinel KQL, plus general shell tools (jq, grep, curl, git, python). " +
-    "Cannot delete Azure resources — deletion is out of scope by design. Prefer `az ... -o json`.",
+    "Run a bash command. Use this for Azure CLI (`az` is pre-authenticated against the target " +
+    "subscription) and for any other shell tool (jq, grep, curl, git, node). " +
+    "To run JavaScript, write a `.mjs` file with a quoted heredoc (`cat > x.mjs <<'EOF'`) and " +
+    "run `node x.mjs` — that keeps the shell from touching the source, and gives real line " +
+    "numbers in stack traces. Deleting Azure resources is out of scope and blocked.",
   parameters: schema,
   async execute(_toolCallId, { command, timeout }, signal) {
     if (DELETION_PATTERN.test(command)) {

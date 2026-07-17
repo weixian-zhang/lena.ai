@@ -4,7 +4,7 @@ Guidance for Claude Code in this repo.
 
 ## What this is
 
-Lena = Azure cloud expert agent. User chats in natural language; Lena does everything on Azure:
+Lena = Azure cloud exengineering pert agent. User chats in natural language; Lena does everything on Azure:
 design, provisioning, troubleshooting (apps + config), operations (patch mgmt, monitoring, more).
 End-to-end execution: resource search, data analysis, ETL, deploy, Sentinel threat hunting, etc.
 **Never deletes Azure resources** — out of scope by design; decline or escalate instead.
@@ -50,7 +50,7 @@ Read-only prior art, inspiration only. Don't copy designs/code. Challenge their 
 heavier/weaker/poor fit, say so and adopt better solution. Disagreeing is expected.
 
 - OpenClaw — `/Users/weixianzhang/projects/open_source/openclaw`
-- Pi mono — `/Users/weixianzhang/projects/open_source/pi`
+- PHermes agent— `/Users/weixianzhang/projects/open_source/hermes-agent`
 
 Read both for (compare takes):
 
@@ -61,23 +61,4 @@ Read both for (compare takes):
 - Channels — deterministic routing: inbound message → agent + session key. Model never picks
   channel.
 - Gateway — transport layer (e.g. WebSocket) fronting all channels, separate from agent logic.
-
-`ref-pi` / `ref-openclaw` skills have file maps + distilled notes per concern.
-
-## Architecture principles (load-bearing)
-
-- **Provider-agnostic.** Never hardcode model provider. `docs/environment_packages.md` lists AI
-  Foundry env vars, but provider comes from config/env, not code.
-- **Reference, don't copy — challenge.** Read concept, write Lena's own version; prefer better
-  approaches over the reference. Cite source file for patterns, or note why diverged.
-- **Backend/frontend split (frontend deferred).** Creds + agent loop server-side; future frontend
-  talks over streamed event channel — creds never reach browser.
-- **No deletion — hard boundary.** Design → provisioning → operations, never delete. No
-  delete/remove capability in any tool; gate out deletes exposed by underlying tools (`az`, Azure
-  MCP).
-- **Tools = the Azure surface.** Each capability (resource graph, cost, deploy, KQL, bash) = a
-  tool. Throw on failure, never return error strings as content. Sequential execution mode for
-  mutations. HITL confirmation for destructive/stateful ops short of deletion (stop, scale-down,
-  etc.).
-- **Sequential, supervised execution with reflection.** Task-steps in order under a supervisor,
-  bounded reflection loop, HITL escalation — not a free-form loop.
+- agent concurrent execution to handle messages from multi channelss
