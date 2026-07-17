@@ -1,4 +1,18 @@
 import { spawn } from "node:child_process";
+import { mkdir, mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { lenaHome } from "./cwd.js";
+
+// ---------------------------------------------------------------------------
+// Cloud shell — the one authenticated surface Lena runs commands through.
+//
+// Two layers: a generic capped subprocess runner ({@link runShell}), and a
+// shared, cached Azure login ({@link getAzureSession}) whose env pre-authenticates
+// `az` for every command. Any tool that shells out to Azure (the `bash` tool, the
+// future Resource Graph / topography module) reuses both — one `az login`, one
+// working directory, one output cap.
+// ---------------------------------------------------------------------------
 
 /**
  * Maximum number of output bytes returned to the model. Azure listings (e.g.
@@ -117,4 +131,75 @@ export function runShell(command: string, options: RunShellOptions): Promise<Run
       resolve({ stdout: Buffer.concat(chunks).toString("utf8"), exitCode: code, truncated });
     });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Azure session — one authenticated, isolated CLI login shared by every caller.
+// ---------------------------------------------------------------------------
+
+/** Persistent working directory for agent commands: `~/.lena/work`. */
+export const WORKDIR = lenaHome("work");
+
+export interface AzureSession {
+  /** Environment carrying a per-session `AZURE_CONFIG_DIR` + PATH/secrets. */
+  env: NodeJS.ProcessEnv;
+  /** Working directory ({@link WORKDIR}): cloning repos, staging deploy artifacts. */
+  cwd: string;
+}
+
+/** Cached login. `az login` runs once; every later `az` call reuses the token. */
+let session: Promise<AzureSession> | undefined;
+
+/** Seconds to allow `az login` before giving up. */
+const LOGIN_TIMEOUT_SECONDS = 60;
+
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+/**
+ * Resolve the shared Azure session, logging in on first use.
+ *
+ * A per-session `AZURE_CONFIG_DIR` isolates this process's credential cache and
+ * active subscription so concurrent sessions don't clobber a shared `~/.azure`.
+ * The promise is cached, so concurrent first-callers await a single `az login`
+ * and everyone after reuses the warm token cache — prepending `az login` to every
+ * command would instead cost a token-endpoint round trip per call.
+ */
+export function getAzureSession(): Promise<AzureSession> {
+  return (session ??= createSession());
+}
+
+async function createSession(): Promise<AzureSession> {
+  const configDir = await mkdtemp(join(tmpdir(), "lena-az-config-"));
+  const cwd = WORKDIR;
+  await mkdir(cwd, { recursive: true });
+
+  const clientId = requireEnv("AZURE_CLIENT_ID");
+  const clientSecret = requireEnv("AZURE_CLIENT_SECRET");
+  const tenantId = requireEnv("AZURE_TENANT_ID");
+
+  const env: NodeJS.ProcessEnv = { ...process.env, AZURE_CONFIG_DIR: configDir };
+
+  // Pass the secret through an env var referenced as "$LENA_SP_SECRET" so the
+  // literal never appears in the command string we build (and might log/stream).
+  // Residual exposure: the CLI still receives it as an argv, visible in `ps`
+  // inside this host. To remove even that, switch the SP to certificate auth
+  // (`--password <cert.pem>`).
+  const loginEnv: NodeJS.ProcessEnv = { ...env, LENA_SP_SECRET: clientSecret };
+  const command =
+    `az login --service-principal -u '${clientId}' -p "$LENA_SP_SECRET" ` +
+    `--tenant '${tenantId}' -o none --only-show-errors`;
+
+  const result = await runShell(command, { cwd, env: loginEnv, timeout: LOGIN_TIMEOUT_SECONDS });
+  if (result.exitCode !== 0) {
+    // stdout carries az's stderr (merged); the secret is not in it.
+    throw new Error(`az login (service principal) failed:\n${result.stdout || "(no output)"}`);
+  }
+
+  return { env, cwd };
 }
