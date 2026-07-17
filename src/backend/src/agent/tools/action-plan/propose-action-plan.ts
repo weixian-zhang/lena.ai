@@ -43,7 +43,7 @@ const schema = Type.Object({
   }),
 });
 
-export type ProposePlanInput = Static<typeof schema>;
+export type ProposeActionPlanInput = Static<typeof schema>;
 
 /**
  * Present a plan and stop for approval. Executes nothing — the model runs the approved
@@ -53,15 +53,15 @@ export type ProposePlanInput = Static<typeof schema>;
  * `terminate: true` ends the run after this tool, so the model cannot follow its own plan
  * with a mutation in the same turn. Caveat: pi only terminates when *every* result in the
  * batch sets it (agent-loop.js `shouldTerminateToolBatch`), so a message batching
- * propose_plan with another call still continues. The `beforeToolCall` policy hook is what
- * closes that hole — this is a strong default, not the enforcement boundary.
+ * propose_action_plan with another call still continues. The `beforeToolCall` policy hook is
+ * what closes that hole — this is a strong default, not the enforcement boundary.
  *
  * Approval is conversational: the user's next message ("approved", or a revision request)
  * starts the next run.
  */
-export const proposePlanTool: AgentTool<typeof schema> = {
-  name: "propose_plan",
-  label: "propose plan",
+export const proposeActionPlanTool: AgentTool<typeof schema> = {
+  name: "propose_action_plan",
+  label: "propose action plan",
   description:
     "Present a plan for changing Azure state, and stop for the user's approval. Call this " +
     "before the first mutating command of any task — provisioning, deploy, config change, " +
@@ -83,7 +83,7 @@ export const proposePlanTool: AgentTool<typeof schema> = {
           type: "text",
           text:
             "Plan presented to the user for approval. Nothing has run. Do not execute any step " +
-            "until the user approves. If they ask for changes, call propose_plan again with the " +
+            "until the user approves. If they ask for changes, call propose_action_plan again with the " +
             "revised plan.",
         },
       ],
