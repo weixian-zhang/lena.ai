@@ -1,6 +1,6 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { type Static, Type } from "typebox";
-import { getAzureSession, MAX_OUTPUT_BYTES, runShell } from "../../../cloud-shell.js";
+import { getAzureSession, MAX_OUTPUT_BYTES, runShell } from "../../cloud-shell.js";
 
 const schema = Type.Object({
   command: Type.String({

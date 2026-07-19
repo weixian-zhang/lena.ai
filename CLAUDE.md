@@ -13,10 +13,12 @@ End-to-end execution: resource search, data analysis, ETL, deploy, Sentinel thre
 
 - Node.js latest (LTS/current) + TypeScript. Modern built-ins: native fetch, `node:` imports, ESM.
   Runtime code → `src/backend`.
+- Agent loop = pi-agent-core's `Agent` (`new Agent({...})` in `src/backend/src/agent/agent.ts`),
+  used as an npm dependency — not a hand-rolled loop. It drives the native tool_use cycle;
+  `toolExecution: "sequential"`. (Still a dependency, never vendored/forked.)
 - Backend-only for now. No UI code. Keep streamed event channel contract clean so frontend can
   attach later.
 - Backend hosted on Azure. Config/secrets/provider selection injectable via env/config, not baked in.
-- Python, az CLI, other binaries = runtime tools the agent shells out to (bash tool / Azure MCP),
   not the app language.
 - Greenfield: `src/backend` empty, no package.json/build/lint/test yet. You're establishing
   conventions, not following them. Prior discarded approach: git history of
@@ -27,22 +29,10 @@ End-to-end execution: resource search, data analysis, ETL, deploy, Sentinel thre
 Keep them short — a one or two line note on the gist is enough. Comment the non-obvious "why",
 not the "what"; don't restate the code or write essay-length block headers.
 
-## Where the design lives (read before building)
+## TypeScript conventions
 
-Little code exists; architecture = reference repos + skills + eval specs.
+- Data structures / DTOs → `type`, not `interface`.
 
-1. `.claude/skills/` — two design-reference skills, keyword-gated, reference material not designs
-   to copy:
-   - `pi-design-reference` (trigger `ref-pi`) — Pi monorepo as prior art. `pi-agent-core` /
-     `pi-ai` = npm **dependencies** (call APIs, never vendor/fork); Pi harness = design reference
-     to reimplement under `src/backend`. Non-negotiable: no hardcoded model provider — agent takes
-     a `Model`, provider from config/env.
-   - `openclaw-design-reference` (trigger `ref-openclaw`) — OpenClaw as one informed opinion;
-     extract principles, adapt, simplify where heavier than Lena needs.
-2. `src/evaluation/*.yaml` — behavioral spec / acceptance criteria. Each YAML = category of e2e
-   test prompts (`resource_search_prompt.yaml`, `data_analysis_prompt.yaml`,
-   `sentinel_threat_hunting_prompt.yaml`, `build_app_and_deploy.yaml`,
-   `no_such_feature_prompt.yaml`). Keep sessions replayable to drive these evals.
 
 ## Reference codebases
 
@@ -50,7 +40,7 @@ Read-only prior art, inspiration only. Don't copy designs/code. Challenge their 
 heavier/weaker/poor fit, say so and adopt better solution. Disagreeing is expected.
 
 - OpenClaw — `/Users/weixianzhang/projects/open_source/openclaw`
-- PHermes agent— `/Users/weixianzhang/projects/open_source/hermes-agent`
+- Hermes agent— `/Users/weixianzhang/projects/open_source/hermes-agent`
 
 Read both for (compare takes):
 
@@ -61,4 +51,4 @@ Read both for (compare takes):
 - Channels — deterministic routing: inbound message → agent + session key. Model never picks
   channel.
 - Gateway — transport layer (e.g. WebSocket) fronting all channels, separate from agent logic.
-- agent concurrent execution to handle messages from multi channelss
+- switchboard - chat, cron job, subagent (future) commands/messages to concurrently processed by pi-core-agents concurrently with no race condition
