@@ -1,6 +1,6 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { type Static, Type } from "typebox";
-import { getAzureSession, MAX_OUTPUT_BYTES, runShell } from "../../cloud-shell.js";
+import { getAzureSession, MAX_OUTPUT_BYTES, runShell } from "../cloud-shell.js";
 
 const schema = Type.Object({
   command: Type.String({
@@ -26,6 +26,20 @@ export type BashToolInput = Static<typeof schema>;
  */
 const DELETION_PATTERN =
   /\b(rm\s+-[a-z]*[rf]|rmdir|az\b[^|;&]*\bdelete\b|--method[= ]+delete|-X[= ]*delete|\bpurge\b)/i;
+
+/**
+ * Coarse heuristic: does this command likely change Azure state? Used only to decide
+ * when to invalidate the cached topography (the agent's afterToolCall hook) — NOT a
+ * security control and not exhaustive. Read-only `az ... list/show` stays cached;
+ * create/update/etc. bust the cache so the next turn re-reads. Over-matching merely
+ * costs a re-query; the topography TTL is the backstop for anything it misses.
+ */
+const MUTATION_PATTERN =
+  /\baz\b[^|;&]*\b(create|update|set|add|deploy|start|stop|restart|scale|deallocate|reset|attach|detach|enable|disable|import|move)\b/i;
+
+export function isMutatingCommand(command: string): boolean {
+  return MUTATION_PATTERN.test(command);
+}
 
 /**
  * Lena's primary execution surface: run a bash command with the Azure CLI

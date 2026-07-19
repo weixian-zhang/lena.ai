@@ -206,6 +206,38 @@ export async function getTopography(options: { signal?: AbortSignal } = {}): Pro
   };
 }
 
+// ---------------------------------------------------------------------------
+// Cache — one in-memory snapshot shared across turns.
+//
+// getTopography() always hits Azure; getCachedTopography() serves a snapshot for up
+// to CACHE_TTL_MS and is what the per-turn grounding injection calls, so a busy
+// investigate/action loop doesn't re-query every turn. invalidateTopography() drops
+// it after Lena mutates the environment (the agent's afterToolCall hook), so the next
+// turn re-reads and reflects the change immediately; the TTL is the backstop for
+// external drift the mutation hook can't see.
+// ---------------------------------------------------------------------------
+
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+let cache: { at: number; value: Promise<Topography> } | undefined;
+
+export function getCachedTopography(options: { signal?: AbortSignal } = {}): Promise<Topography> {
+  const now = Date.now();
+  if (cache && now - cache.at < CACHE_TTL_MS) return cache.value;
+
+  const value = getTopography(options);
+  cache = { at: now, value };
+  // Never cache a failure: if the fetch rejects, drop the entry so the next call retries.
+  value.catch(() => {
+    if (cache?.value === value) cache = undefined;
+  });
+  return value;
+}
+
+export function invalidateTopography(): void {
+  cache = undefined;
+}
+
 function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   const map = new Map<string, T[]>();
   for (const item of items) {

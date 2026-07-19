@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
 import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
 import { streamSimple, type Model } from "@mariozechner/pi-ai";
+import { injectTopography, invalidateTopographyAfterMutation } from "./ground-topography.js";
 
 // Load src/backend/.env into process.env for local development, using Node's
 // built-in loader (no dependency). In deployed environments the variables come
@@ -175,5 +176,9 @@ export function createPiAgent(options: CreateAgentOptions): Agent {
       tools: options.tools ?? [],
     },
     toolExecution: "sequential",
+    // Ambient grounding: inject a fresh Azure topography snapshot before each model
+    // call, and drop the cached snapshot after Lena changes state. See ground-topography.ts.
+    transformContext: injectTopography,
+    afterToolCall: invalidateTopographyAfterMutation,
   });
 }
