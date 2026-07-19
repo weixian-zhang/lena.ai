@@ -1,5 +1,6 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-import { azureCliGenerateTool } from "./azure-cli/azure-cli.js";
+import { azureCliGenerateTool } from "./azure-mcp/azure-cli.js";
+import { azurePricingTool } from "./azure-mcp/pricing.js";
 import { bashTool } from "./bash.js";
 import { clarifyTool } from "./clarify.js";
 import { proposePlanTool } from "./propose-plan.js";
@@ -19,7 +20,15 @@ import { proposePlanTool } from "./propose-plan.js";
  * model resolves genuine ambiguity instead of guessing. Both are terminate-and-resume: the
  * user's next message is the answer.
  * `azure_cli_generate` turns a natural-language intent into the exact `az` command
- * (via Azure's own MCP server) for `bash` to then run. Narrower typed tools (e.g.
- * Resource Graph) land alongside them as needs arise.
+ * (via Azure's own MCP server) for `bash` to then run.
+ * `azure_pricing` looks up Azure retail pricing (via the same MCP server, `pricing`
+ * namespace) for cost estimation. Narrower typed tools (e.g. Resource Graph) land
+ * alongside them as needs arise.
  */
-export const tools: AgentTool[] = [bashTool, proposePlanTool, clarifyTool, azureCliGenerateTool];
+export const tools: AgentTool[] = [
+  bashTool,
+  proposePlanTool,
+  clarifyTool,
+  azureCliGenerateTool,
+  azurePricingTool,
+];

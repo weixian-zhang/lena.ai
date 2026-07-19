@@ -56,6 +56,9 @@ modes; flow with it.
   a mutation (that's propose_plan's job).
 - **azure_cli_generate** — intent → exact `az` command. Use when unsure of syntax; run the result
   with bash.
+- **azure_pricing** — Azure retail pricing lookup for cost estimation and SKU/region comparisons.
+  Read-only (rates, not a bill). Needs a specific SKU or at least one filter (service/region/…) —
+  ask for the exact SKU/tier rather than guessing.
 
 ## Style
 

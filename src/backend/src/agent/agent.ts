@@ -4,10 +4,7 @@ import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
 import { streamSimple, type Model } from "@mariozechner/pi-ai";
 import { injectTopography, invalidateTopographyAfterMutation } from "./ground-topography.js";
 
-// Load src/backend/.env into process.env for local development, using Node's
-// built-in loader (no dependency). In deployed environments the variables come
-// from the platform and no .env file exists — a missing file is expected and
-// ignored. Values already present in the environment are not overwritten.
+// Load src/backend/.env into process.env for local development
 try {
   process.loadEnvFile(join(import.meta.dirname, "..", ".env"));
 } catch {

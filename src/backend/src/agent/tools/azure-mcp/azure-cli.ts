@@ -1,9 +1,16 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { type Static, Type } from "typebox";
-import { getCliGenerateSession } from "./mcp-server.js";
+import { createMcpSession, extractText } from "./mcp-server.js";
 
 /** Milliseconds to allow a single generate call before giving up. */
 const CALL_TIMEOUT_MS = 60_000;
+
+// Azure CLI-generate via the Azure MCP server's `extension` namespace. Reuses the
+// shared MCP session helper, scoped to its own namespace so its tool list stays small.
+const getCliGenerateSession = createMcpSession({
+  namespace: "extension",
+  tool: { name: "extension_cli_generate" },
+});
 
 const schema = Type.Object({
   intent: Type.String({
@@ -16,19 +23,6 @@ const schema = Type.Object({
 });
 
 export type AzureCliGenerateInput = Static<typeof schema>;
-
-/** Join the text parts of an MCP result into one string (the `az` command). */
-function extractText(content: unknown): string {
-  if (!Array.isArray(content)) return "";
-  return content
-    .filter(
-      (part): part is { type: "text"; text: string } =>
-        !!part && part.type === "text" && typeof part.text === "string",
-    )
-    .map((part) => part.text)
-    .join("\n")
-    .trim();
-}
 
 // Generate an `az` command from a natural-language intent via Azure's MCP
 // server. Returns command text only — no side effects; run it with `bash`.
