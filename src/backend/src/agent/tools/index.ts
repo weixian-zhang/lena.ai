@@ -1,5 +1,9 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-import { azureCliGenerateTool } from "./azure-mcp/azure-cli.js";
+// azure_cli_generate is disabled for now: its backing MCP endpoint only accepts a
+// user/delegated token (401s on the service-principal/app token a hosted Lena uses),
+// and the model is capable enough at emitting `az` syntax on its own. Re-enable by
+// restoring this import and the registry entry below.
+// import { azureCliGenerateTool } from "./azure-mcp/azure-cli.js";
 import { azurePricingTool } from "./azure-mcp/pricing.js";
 import { bashTool } from "./bash.js";
 import { clarifyTool } from "./clarify.js";
@@ -19,9 +23,7 @@ import { proposePlanTool } from "./propose-plan.js";
  * `clarify` asks the user a question (optional pickable choices) and ends the run, so the
  * model resolves genuine ambiguity instead of guessing. Both are terminate-and-resume: the
  * user's next message is the answer.
- * `azure_cli_generate` turns a natural-language intent into the exact `az` command
- * (via Azure's own MCP server) for `bash` to then run.
- * `azure_pricing` looks up Azure retail pricing (via the same MCP server, `pricing`
+ * `azure_pricing` looks up Azure retail pricing (via the MCP server, `pricing`
  * namespace) for cost estimation. Narrower typed tools (e.g. Resource Graph) land
  * alongside them as needs arise.
  */
@@ -29,6 +31,6 @@ export const tools: AgentTool[] = [
   bashTool,
   proposePlanTool,
   clarifyTool,
-  azureCliGenerateTool,
+  // azureCliGenerateTool, // disabled — see import note above
   azurePricingTool,
 ];

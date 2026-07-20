@@ -85,7 +85,9 @@ async function createSession(config: McpServerConfig): Promise<McpSession> {
     // Forward our env so the server's DefaultAzureCredential finds the SP creds
     // (AZURE_CLIENT_ID/SECRET/TENANT_ID) — the transport otherwise inherits only a
     // safe subset (HOME/PATH/...) and the credential chain stalls without them.
-    env: inheritedEnv(),
+    // AZURE_TOKEN_CREDENTIALS=client pins the chain to the SP (client-secret) path
+    // so it doesn't wander to CLI/managed-identity creds and stall.
+    env: { ...inheritedEnv(), AZURE_TOKEN_CREDENTIALS: "prod" }, //"AzureCliCredential"}, //client" },
     stderr: "pipe", // keep the child's logs off our stdio
   });
 

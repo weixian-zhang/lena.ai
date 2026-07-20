@@ -261,7 +261,7 @@ export function formatTopography(topo: Topography): string {
   const rgsBySub = groupBy(topo.resourceGroups, (r) => r.subscriptionId);
   const vnetsBySub = groupBy(topo.vnets, (v) => v.subscriptionId);
 
-  const lines: string[] = ["# Azure topography"];
+  const lines: string[] = ["# Azure resource snapshot"];
   if (topo.truncated) {
     lines.push("_Note: results were truncated — the topography below may be incomplete._");
   }
@@ -272,7 +272,7 @@ export function formatTopography(topo: Topography): string {
 
     const rgs = rgsBySub.get(sub.subscriptionId) ?? [];
     lines.push(
-      rgs.length
+    rgs.length
         ? `Resource groups (${rgs.length}): ${rgs.map((r) => `${r.name} (${r.location})`).join(", ")}`
         : "Resource groups: none",
     );
