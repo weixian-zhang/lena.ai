@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36">
   <diagram name="Page-1" id="FIoUPqbTfphzpsdLcEyU">
-    <mxGraphModel dx="6704" dy="2149" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="7506" dy="2674" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -857,13 +857,13 @@
         <mxCell id="ku3NH2LDfBgmaNuzSJCv-51" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;guardrails&lt;/span&gt;&lt;/h1&gt;&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;font-size: 19px; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-weight: normal;&quot;&gt;&amp;nbsp;- save()&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;&lt;span style=&quot;font-size: 19px;&quot;&gt;&amp;nbsp;- resume()&lt;/span&gt;&lt;/p&gt;" vertex="1">
           <mxGeometry height="128" width="192" x="-3606" y="2552" as="geometry" />
         </mxCell>
-        <mxCell id="dEBIJkI0y8D-qu6u2zJh-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;evals&lt;/span&gt;&lt;/h1&gt;" vertex="1">
+        <mxCell id="dEBIJkI0y8D-qu6u2zJh-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;verify&lt;/span&gt;&lt;/h1&gt;" vertex="1">
           <mxGeometry height="96" width="192" x="-3610" y="2720" as="geometry" />
         </mxCell>
         <mxCell id="dEBIJkI0y8D-qu6u2zJh-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=35;" value="azure topography&amp;nbsp;" vertex="1">
           <mxGeometry height="110" width="219" x="-4691" y="2455" as="geometry" />
         </mxCell>
-        <mxCell id="cjE1baZZvVmIIVMY8tcj-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;soul.md&lt;/h1&gt;&lt;div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;Write journal about you&lt;/font&gt;&lt;/div&gt;" vertex="1">
+        <mxCell id="cjE1baZZvVmIIVMY8tcj-1" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;indelible.md&lt;/h1&gt;&lt;div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;Write journal about you&lt;/font&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="118" width="200" x="-3288" y="1955" as="geometry" />
         </mxCell>
         <mxCell id="cjE1baZZvVmIIVMY8tcj-5" parent="1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=1;strokeColor=default;arcSize=9;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;lena.md&lt;/h1&gt;&lt;div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;Instructions you write for Lena to follow&amp;nbsp;&lt;/font&gt;&lt;/div&gt;" vertex="1">
