@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Debug the currently open vitest file. Breakpoints work because
+            // autoAttachChildProcesses attaches to vitest's worker process.
+            "type": "node",
+            "request": "launch",
+            "name": "Debug vitest (current file)",
+            "cwd": "${workspaceFolder}/src/backend",
+            "program": "${workspaceFolder}/src/backend/node_modules/vitest/vitest.mjs",
+            "args": ["run", "${file}"],
+            "autoAttachChildProcesses": true,
+            "smartStep": true,
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+            "console": "integratedTerminal"
+        },
+        {
+            // Pinned to agent.chat.test.ts specifically.
+            "type": "node",
+            "request": "launch",
+            "name": "Debug vitest (agent.chat.test.ts)",
+            "cwd": "${workspaceFolder}/src/backend",
+            "program": "${workspaceFolder}/src/backend/node_modules/vitest/vitest.mjs",
+            "args": ["run", "test/agent.chat.test.ts"],
+            "autoAttachChildProcesses": true,
+            "smartStep": true,
+            "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+            "console": "integratedTerminal"
+        }
+    ]
+}
