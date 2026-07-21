@@ -118,9 +118,18 @@ function subscribeAgentEvent(agent: Agent): () => void {
           )})`,
         );
         break;
-      case "tool_execution_end": // after a tool runs — flag failures
+      case "tool_execution_end": {
+        // After a tool runs — flag failures and dump what it returned. The result's
+        // `content` is a `{ type: "text", text }[]` block array (see bashTool.execute);
+        // join the text so the actual `az` output is visible during a live run.
+        const content = event.result?.content;
+        const resultText = Array.isArray(content)
+          ? content.map((c: any) => (c?.type === "text" ? c.text : JSON.stringify(c))).join("")
+          : clip(content, 2000);
         console.log(`[agent] ← tool ${event.toolName} ${event.isError ? "✗ error" : "ok"}`);
+        console.log(resultText);
         break;
+      }
       case "message_update":
         // Stream the assistant's text as it's generated, delta by delta. Written raw
         // (no prefix/newline) so the tokens reconstruct into flowing text. Other
@@ -168,7 +177,7 @@ test.skipIf(!modelConfigured())(
   "provisioning - multi-resource request follows the Action flow (plan → approve → execute)",
   // Generous: turn 1 runs several read-only investigation turns before the plan; the
   // model's turn count varies run to run.
-  { timeout: 900_000 },
+  { timeout: 1200_000 },
   async () => {
     const agent = createPiAgent({ systemPrompt: SYSTEM_PROMPT, tools });
 
