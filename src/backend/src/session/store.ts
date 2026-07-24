@@ -6,7 +6,7 @@ import type {
   Session,
   SessionEndReason,
   SessionPatch,
-  StoredMessage,
+  TranscriptMessage,
 } from "./types.js";
 
 /**
@@ -19,7 +19,8 @@ import type {
  *  - Sessions: durable conversation records + the small mutable hot state
  *    (`mode`, `lastInteractionAt`). A partial unique index on `session_key WHERE
  *    ended_at IS NULL` makes this the single source of truth for the live session.
- *  - Messages: append-only transcript + in-place, soft-archive compaction.
+ *  - Messages: append-only transcript + in-place compaction via `compacted_by_id`
+ *    (NULL = live; else the id of the summary that replaced the row).
  *
  * Implementation contract:
  *  - `appendMessages` and `compact` MUST be atomic (single transaction each).
@@ -48,14 +49,11 @@ export interface SessionStore {
    */
   getLiveSession(sessionKey: string): Promise<Session | null>;
 
-  /** Update hot state (idle clock, mode, meta) on the live session. */
+  /** Update hot state (idle clock, mode) on the live session. */
   touchSession(id: string, patch: SessionPatch): Promise<void>;
 
   /** Mark a session no longer live. Idempotent; keeps the row and its transcript. */
   endSession(id: string, reason: SessionEndReason): Promise<void>;
-
-  /** Archive/unarchive a session for listing/pruning (does not end it). */
-  setArchived(id: string, archived: boolean): Promise<void>;
 
   // ── Messages (append-only transcript) ───────────────────────────────────
 
@@ -64,19 +62,20 @@ export interface SessionStore {
    * autoincrement ids. Intended to be called once per agent turn with the batch
    * from pi's `agent_end` event. Returns the persisted rows (with ids).
    */
-  appendMessages(sessionId: string, messages: NewMessage[]): Promise<StoredMessage[]>;
+  appendMessages(sessionId: string, messages: NewMessage[]): Promise<TranscriptMessage[]>;
 
   /**
    * Load transcript rows, ordered by `id`. Defaults to live context only
-   * (`active = 1`); the returned `payload`s feed pi's `initialState.messages`.
+   * (`compacted_by_id IS NULL`); the returned `payload`s feed pi's `initialState.messages`.
    */
-  getMessages(sessionId: string, opts?: GetMessagesOptions): Promise<StoredMessage[]>;
+  getMessages(sessionId: string, opts?: GetMessagesOptions): Promise<TranscriptMessage[]>;
 
   /**
-   * In-place compaction (Hermes `archive_and_compact`), atomically:
-   *   1. soft-archive every current live row (`active = 0, compacted = 1`),
-   *   2. insert `summary` as fresh `active = 1` rows.
-   * The `sessionId` never rotates; live context after this is `getMessages(id)`.
+   * In-place compaction, atomically:
+   *   1. insert `summary` as fresh live rows (the summary head is the first),
+   *   2. point every prior live row's `compacted_by_id` at the summary head.
+   * Live context after this is `getMessages(id)` (rows with `compacted_by_id IS NULL`);
+   * the `sessionId` never rotates. A summary of many rounds forms a walkable chain.
    */
   compact(sessionId: string, summary: NewMessage[]): Promise<CompactionResult>;
 

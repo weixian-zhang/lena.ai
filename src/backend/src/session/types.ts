@@ -1,4 +1,5 @@
-import type { AgentMessage } from "@mariozechner/pi-agent-core";
+import type { AgentMessage, AgentMode } from "../agent/types.js";
+import type { InboundMessage } from "../gateway/types.js";
 
 /**
  * Domain types for the session store.
@@ -18,13 +19,10 @@ import type { AgentMessage } from "@mariozechner/pi-agent-core";
 /** Backend selection. Sourced from the `MODE` env var (`LOCAL` → SQLite, `CLOUD` → Postgres). */
 export type StoreMode = "LOCAL" | "CLOUD";
 
-/** How much of the (channel, chat, user) identity a session isolates on. */
-export type ChatType = "dm" | "group" | "channel" | "thread";
-
 /**
  * Transcript row role. Mirrors pi's {@link AgentMessage} base roles; a compaction
- * summary is stored as an ordinary message row (its "summary-ness" is implicit —
- * it is the surviving `active` row after older rows were archived).
+ * summary is stored as an ordinary message row (a live row that other, older rows
+ * now point at via `compactedById`).
  */
 export type MessageRole = "user" | "assistant" | "toolResult";
 
@@ -40,35 +38,6 @@ export type SessionEndReason =
   | "agent_close"; // process/gateway shut the session down
 
 /**
- * Lena's conversational mode — drives the prompt stack (`base + modePrompt(mode)`).
- * Persisted on the session so a resumed conversation keeps its mode.
- */
-export type AgentMode = "consult" | "plan" | "execute" | "verify";
-
-/**
- * Normalized inbound descriptor produced by each channel adapter (Slack / Teams /
- * CLI). This is the *only* input to the deterministic session-key builder — the
- * model never picks a channel or key. Stored as JSON on `sessions.source`.
- */
-export type SessionSource = {
-  /** Origin channel: `slack` | `teams` | `cli` | … */
-  channel: string;
-  /** Target agent. Currently always `lena`; a real key segment for future multi-agent. */
-  agentId: string;
-  chatType: ChatType;
-  /** Conversation container id (DM id, channel id, group id). */
-  chatId?: string;
-  /** Sender id as seen on the wire. */
-  userId?: string;
-  /** Stable sender id (e.g. Slack team-scoped id) — preferred over `userId` for keying. */
-  userIdAlt?: string;
-  /** Thread/topic id, when the message is in a thread. */
-  threadId?: string;
-  /** Workspace / tenant / guild scope, for multi-tenant isolation. */
-  scopeId?: string;
-};
-
-/**
  * A durable conversation record. `id` is the `sessionId` referenced everywhere
  * else. Carries the small mutable hot state (`mode`, `lastInteractionAt`) inline
  * — updated per turn via {@link SessionStore.touchSession}.
@@ -78,7 +47,7 @@ export type Session = {
   id: string;
   /** Routing key this session was created for. At most one live session per key. */
   sessionKey: string;
-  source: SessionSource;
+  source: InboundMessage;
   /** Current conversational mode; `null` until set. */
   mode: AgentMode | null;
   /** Start of this session — drives the daily reset. */
@@ -88,16 +57,13 @@ export type Session = {
   /** Set when this session is no longer live; `null` while live. */
   endedAt: number | null;
   endReason: SessionEndReason | null;
-  archived: boolean;
-  /** Extension bag (toggles, token counters) kept out of columns. Optional. */
-  meta: Record<string, unknown>;
 };
 
 /** Input to {@link SessionStore.createSession}. Store fills defaults for omitted fields. */
 export type NewSession = {
   id: string;
   sessionKey: string;
-  source: SessionSource;
+  source: InboundMessage;
   mode?: AgentMode;
   /** Defaults to now (epoch seconds); also seeds `lastInteractionAt`. */
   startedAt?: number;
@@ -107,11 +73,10 @@ export type NewSession = {
 export type SessionPatch = {
   lastInteractionAt?: number;
   mode?: AgentMode;
-  meta?: Record<string, unknown>;
 };
 
 /** A persisted transcript row. `id` is monotonic per store; ordering key within a session. */
-export type StoredMessage = {
+export type TranscriptMessage = {
   /** Autoincrement id. When filtered by `sessionId` and ordered by `id`, this *is* the sequence. */
   id: number;
   sessionId: string;
@@ -119,10 +84,13 @@ export type StoredMessage = {
   role: MessageRole;
   /** The full pi message, round-tripped losslessly (stored as JSON in `content`). */
   payload: AgentMessage;
-  /** In the live context window (`WHERE active = 1` reconstructs it). */
-  active: boolean;
-  /** Summarized away (still discoverable/searchable). See {@link SessionStore.compact}. */
-  compacted: boolean;
+  /**
+   * Liveness + compaction lineage in one field:
+   *  - `null` → live (in the context window; `WHERE compacted_by_id IS NULL` reconstructs it).
+   *  - `<id>` → summarized away; the id of the summary message that replaced this row.
+   * See {@link SessionStore.compact}.
+   */
+  compactedById: number | null;
   createdAt: number;
 };
 
@@ -136,7 +104,7 @@ export type NewMessage = {
 
 /** Options for {@link SessionStore.getMessages}. */
 export type GetMessagesOptions = {
-  /** Include archived (`active = 0`) rows. Default `false` → live context only. */
+  /** Include compacted (`compacted_by_id IS NOT NULL`) rows. Default `false` → live context only. */
   includeInactive?: boolean;
   /** Max rows to return, ordered by `id`. */
   limit?: number;
@@ -146,8 +114,8 @@ export type GetMessagesOptions = {
 
 /** Result of a {@link SessionStore.compact} call. */
 export type CompactionResult = {
-  /** How many previously-active rows were soft-archived. */
+  /** How many previously-live rows were summarized away (pointed at the summary head). */
   archivedCount: number;
   /** The freshly inserted summary rows (now the head of the live context). */
-  summary: StoredMessage[];
+  summary: TranscriptMessage[];
 };

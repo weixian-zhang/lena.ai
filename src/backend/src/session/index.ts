@@ -1,7 +1,5 @@
 export type { SessionStore, CreateSessionStore } from "./store.js";
 export type {
-  AgentMode,
-  ChatType,
   CompactionResult,
   GetMessagesOptions,
   MessageRole,
@@ -10,7 +8,6 @@ export type {
   Session,
   SessionEndReason,
   SessionPatch,
-  SessionSource,
-  StoredMessage,
   StoreMode,
+  TranscriptMessage,
 } from "./types.js";
