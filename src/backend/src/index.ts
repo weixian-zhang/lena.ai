@@ -1,8 +1,16 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { AgentEvent } from "@mariozechner/pi-agent-core";
 import { createPiAgent } from "./agent/agent.js";
-import { SYSTEM_PROMPT } from "./agent/prompt/system-prompt.js";
 import { tools } from "./agent/tools/index.js";
+
+// System prompt is authored as Markdown and copied into dist by build's copy-assets
+// step, so the .md sits at the same relative path under both tsx (src) and node (dist).
+const SYSTEM_PROMPT = readFileSync(
+  join(import.meta.dirname, "agent/prompt/system-prompt.md"),
+  "utf8",
+).trim();
 
 /**
  * Minimal entrypoint: take a single prompt (CLI args or stdin), run one agent turn,
