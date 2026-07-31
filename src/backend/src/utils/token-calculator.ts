@@ -3,21 +3,13 @@
 // unknowable and any real tokenizer would be confidently wrong.
 
 import type { AgentContentBlock, AgentMessage } from "../agent/types.js";
-
-/** Character-to-token ratio for prose. */
-export const CHARS_PER_TOKEN = 4;
-
-/** Ratio for JSON payloads (tool call arguments) — punctuation-dense, so denser in tokens. */
-export const JSON_CHARS_PER_TOKEN = 3;
-
-/** Per-message allowance for the role/delimiter framing the provider adds. */
-export const MESSAGE_OVERHEAD_TOKENS = 4;
-
-/** Flat estimate per image, covering up to ~4K resolution. */
-export const IMAGE_TOKENS = 3_000;
-
-/** Flat estimate per PDF (~100 pages at 258 tokens/page). */
-export const PDF_TOKENS = 25_800;
+import {
+  CHARS_PER_TOKEN,
+  IMAGE_TOKENS,
+  JSON_CHARS_PER_TOKEN,
+  MESSAGE_OVERHEAD_TOKENS,
+  PDF_TOKENS,
+} from "../config.js";
 
 /**
  * Estimate tokens for a text string from its character count.
