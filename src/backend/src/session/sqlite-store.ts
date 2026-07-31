@@ -5,6 +5,7 @@ import type { AgentMessage, AgentMode } from "../agent/types.js";
 import type { InboundMessage } from "../gateway/types.js";
 import type { SessionStore } from "./store.js";
 import type {
+  CompactionBoundary,
   CompactionResult,
   GetMessagesOptions,
   MessageRole,
@@ -40,12 +41,14 @@ type SessionRow = {
   end_reason: string | null;
 };
 
-/** Raw `messages` row. */
+/** Raw `messages` row. SQLite has no boolean, so `is_summary` comes back as 0/1. */
 type MessageRow = {
   id: number;
   session_id: string;
   role: string;
   content: string;
+  seq: number;
+  is_summary: number;
   created_at: number;
   compacted_by_id: number | null;
 };
@@ -67,8 +70,10 @@ function toMessage(r: MessageRow): TranscriptMessage {
   return {
     id: r.id,
     sessionId: r.session_id,
+    seq: r.seq,
     role: r.role as MessageRole,
     payload: JSON.parse(r.content) as AgentMessage,
+    isSummary: r.is_summary === 1,
     compactedById: r.compacted_by_id,
     createdAt: r.created_at,
   };
@@ -175,16 +180,23 @@ export class SqliteSessionStore implements SessionStore {
     const insert = this.db.prepare(
       `INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)`,
     );
+    // seq = id for ordinary appends. Set in a second statement rather than a
+    // subquery so the value comes from the sequence itself and can't race.
+    const setSeq = this.db.prepare(`UPDATE messages SET seq = id WHERE id = ?`);
     const tx = this.db.transaction((batch: NewMessage[]): TranscriptMessage[] => {
       const out: TranscriptMessage[] = [];
       for (const m of batch) {
         const createdAt = m.createdAt ?? nowSec();
         const info = insert.run(sessionId, m.role, JSON.stringify(m.payload), createdAt);
+        const id = Number(info.lastInsertRowid);
+        setSeq.run(id);
         out.push({
-          id: Number(info.lastInsertRowid),
+          id,
           sessionId,
+          seq: id,
           role: m.role,
           payload: m.payload,
+          isSummary: false,
           compactedById: null,
           createdAt,
         });
@@ -198,7 +210,7 @@ export class SqliteSessionStore implements SessionStore {
     let sql = `SELECT * FROM messages WHERE session_id = ?`;
     const vals: (string | number)[] = [sessionId];
     if (!opts.includeInactive) sql += ` AND compacted_by_id IS NULL`;
-    sql += ` ORDER BY id`; // insertion order — never timestamp
+    sql += ` ORDER BY seq, id`; // conversation order — never timestamp
     if (opts.limit !== undefined) {
       sql += ` LIMIT ?`;
       vals.push(opts.limit);
@@ -213,29 +225,63 @@ export class SqliteSessionStore implements SessionStore {
     return rows.map(toMessage);
   }
 
-  async compact(sessionId: string, summary: NewMessage[]): Promise<CompactionResult> {
+  async compact(
+    sessionId: string,
+    summary: NewMessage,
+    boundary: CompactionBoundary,
+  ): Promise<CompactionResult> {
     const insert = this.db.prepare(
-      `INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO messages (session_id, role, content, seq, is_summary, created_at)
+       VALUES (?, ?, ?, ?, 1, ?)`,
     );
-    // Every prior live row has id < headId (ids are monotonic), so the guard
-    // archives exactly those and never the just-inserted summary rows.
+    // Archive by conversation-order span. `id <> ?` keeps the summary just
+    // inserted — whose seq is inside the span by construction — from archiving
+    // itself. Concurrent appends land above beforeSeq and are left alone.
     const archiveStmt = this.db.prepare(
       `UPDATE messages SET compacted_by_id = ?
-       WHERE session_id = ? AND compacted_by_id IS NULL AND id < ?`,
+       WHERE session_id = ? AND compacted_by_id IS NULL AND id <> ?
+         AND seq > ? AND seq < ?`,
     );
     const tx = this.db.transaction((): CompactionResult => {
-      const out: TranscriptMessage[] = [];
-      let headId: number | null = null;
-      for (const m of summary) {
-        const createdAt = m.createdAt ?? nowSec();
-        const info = insert.run(sessionId, m.role, JSON.stringify(m.payload), createdAt);
-        const id = Number(info.lastInsertRowid);
-        if (headId === null) headId = id;
-        out.push({ id, sessionId, role: m.role, payload: m.payload, compactedById: null, createdAt });
+      const createdAt = summary.createdAt ?? nowSec();
+      const info = insert.run(
+        sessionId,
+        summary.role,
+        JSON.stringify(summary.payload),
+        boundary.seq,
+        createdAt,
+      );
+      const id = Number(info.lastInsertRowid);
+      const archivedCount = archiveStmt.run(
+        id,
+        sessionId,
+        id,
+        boundary.afterSeq,
+        boundary.beforeSeq,
+      ).changes;
+
+      // A stale boundary would leave a summary describing nothing. Throwing
+      // rolls the insert back with it.
+      if (archivedCount === 0) {
+        throw new Error(
+          `compact: no live rows in (${boundary.afterSeq}, ${boundary.beforeSeq}) ` +
+            `for session ${sessionId}`,
+        );
       }
-      // No summary → nothing anchors the compaction; archive nothing (safe no-op).
-      const archivedCount = headId === null ? 0 : archiveStmt.run(headId, sessionId, headId).changes;
-      return { archivedCount, summary: out };
+
+      return {
+        archivedCount,
+        summary: {
+          id,
+          sessionId,
+          seq: boundary.seq,
+          role: summary.role,
+          payload: summary.payload,
+          isSummary: true,
+          compactedById: null,
+          createdAt,
+        },
+      };
     });
     return tx();
   }

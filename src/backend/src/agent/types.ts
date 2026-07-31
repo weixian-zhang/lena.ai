@@ -13,6 +13,13 @@ import type { AgentMessage as PiAgentMessage } from "@mariozechner/pi-agent-core
 export type AgentMessage = PiAgentMessage;
 
 /**
+ * One content block of a transcript message (text, thinking, tool call, image).
+ * Derived from {@link AgentMessage} rather than imported, so it tracks the
+ * runtime's block union without adding a second pi import site.
+ */
+export type AgentContentBlock = Extract<AgentMessage["content"], readonly unknown[]>[number];
+
+/**
  * Lena's conversational mode — drives the prompt stack (`base + modePrompt(mode)`).
  * Persisted on the session so a resumed conversation keeps its mode.
  */

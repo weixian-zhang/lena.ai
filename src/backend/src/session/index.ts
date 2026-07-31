@@ -1,5 +1,6 @@
 export type { SessionStore, CreateSessionStore } from "./store.js";
 export type {
+  CompactionBoundary,
   CompactionResult,
   GetMessagesOptions,
   MessageRole,

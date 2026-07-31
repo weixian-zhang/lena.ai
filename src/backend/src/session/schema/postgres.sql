@@ -22,8 +22,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_one_live_per_key
     ON sessions (session_key)
     WHERE ended_at IS NULL;
 
--- Append-only transcript. id IDENTITY is the per-session sequence when filtered
--- by session_id and ordered by id. content is the AgentMessage as JSON.
+-- Append-only transcript. id IDENTITY is insertion order; seq is conversation
+-- order. content is the AgentMessage as JSON.
+--
+-- seq exists because a compaction summary is written *after* the tail it
+-- precedes: appends set seq = id, but a summary gets a fractional seq (head.seq
+-- + 0.5) so it sorts back between the retained head and tail. Deliberately not
+-- unique — an archived row may share a seq with the summary that replaced its
+-- span, and only one of the two is ever live.
+--
 -- compacted_by_id encodes both liveness and compaction lineage in one column:
 --   NULL     = live (in the context window)
 --   <id>     = summarized away; points at the summary message that replaced it
@@ -33,14 +40,17 @@ CREATE TABLE IF NOT EXISTS messages (
     session_id      TEXT NOT NULL REFERENCES sessions(id),
     role            TEXT NOT NULL,                 -- user | assistant | toolResult
     content         TEXT NOT NULL,                 -- JSON-serialized AgentMessage
+    seq             DOUBLE PRECISION NOT NULL DEFAULT 0,  -- conversation order; = id for appends
+    is_summary      SMALLINT NOT NULL DEFAULT 0,   -- 1 for a compaction summary
     created_at      DOUBLE PRECISION NOT NULL,
     compacted_by_id BIGINT REFERENCES messages(id)
 );
 
 -- Live-context reconstruction (the hot read): partial index over only live rows.
--- getMessages(session_id) WHERE compacted_by_id IS NULL ORDER BY id.
+-- getMessages(session_id) WHERE compacted_by_id IS NULL ORDER BY seq, id.
+-- id breaks seq ties, which only archived rows can produce.
 CREATE INDEX IF NOT EXISTS idx_messages_live
-    ON messages (session_id, id)
+    ON messages (session_id, seq, id)
     WHERE compacted_by_id IS NULL;
 
 -- Reverse lookup: every message a given summary replaced.

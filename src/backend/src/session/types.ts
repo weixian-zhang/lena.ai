@@ -22,7 +22,10 @@ export type StoreMode = "LOCAL" | "CLOUD";
 /**
  * Transcript row role. Mirrors pi's {@link AgentMessage} base roles; a compaction
  * summary is stored as an ordinary message row (a live row that other, older rows
- * now point at via `compactedById`).
+ * now point at via `compactedById`), distinguished only by `isSummary`.
+ *
+ * A summary is written as `assistant` so the compacted context still alternates:
+ * `user` (head) → `assistant` (summary) → `user` (first retained turn).
  */
 export type MessageRole = "user" | "assistant" | "toolResult";
 
@@ -75,15 +78,29 @@ export type SessionPatch = {
   mode?: AgentMode;
 };
 
-/** A persisted transcript row. `id` is monotonic per store; ordering key within a session. */
+/** A persisted transcript row. `id` is insertion order; `seq` is conversation order. */
 export type TranscriptMessage = {
-  /** Autoincrement id. When filtered by `sessionId` and ordered by `id`, this *is* the sequence. */
+  /** Autoincrement id — insertion order, and the target of `compactedById`. */
   id: number;
   sessionId: string;
+  /**
+   * Conversation-order key. Ordinary appends get `seq = id`, so the two agree.
+   * They diverge only for a compaction summary, which is written *after* the tail
+   * it precedes and so carries a fractional `seq` that sorts it back into place.
+   * Not unique: an archived row may share a `seq` with the summary that replaced
+   * its span, which is harmless because only one of them is ever live.
+   */
+  seq: number;
   /** Denormalized from `payload.role` for cheap filtering. */
   role: MessageRole;
   /** The full pi message, round-tripped losslessly (stored as JSON in `content`). */
   payload: AgentMessage;
+  /**
+   * True for a compaction summary. At most one summary is live at a time — a new
+   * compaction folds the previous one in and archives it — so this doubles as the
+   * lookup for "the summary currently in context".
+   */
+  isSummary: boolean;
   /**
    * Liveness + compaction lineage in one field:
    *  - `null` → live (in the context window; `WHERE compacted_by_id IS NULL` reconstructs it).
@@ -112,10 +129,33 @@ export type GetMessagesOptions = {
   offset?: number;
 };
 
+/**
+ * The span {@link SessionStore.compact} replaces: every live row strictly between
+ * the retained head and the retained tail, in conversation order.
+ *
+ * Bounds are `seq`, not `id`. The two diverge after the first compaction — a
+ * summary is inserted *later* than the tail rows it precedes, so it carries a
+ * higher `id` alongside a lower `seq`. An id range would then either miss the
+ * previous summary or swallow a retained tail row, depending on where the next
+ * tail happens to start.
+ */
+export type CompactionBoundary = {
+  /** Exclusive lower bound — the `seq` of the last retained head row. */
+  afterSeq: number;
+  /** Exclusive upper bound — the `seq` of the first retained tail row. */
+  beforeSeq: number;
+  /**
+   * `seq` to give the summary so it sorts between head and tail. Must lie strictly
+   * within `(afterSeq, beforeSeq)`; `afterSeq + 0.5` is the obvious choice, and
+   * never collides with an integer `seq` already in use.
+   */
+  seq: number;
+};
+
 /** Result of a {@link SessionStore.compact} call. */
 export type CompactionResult = {
-  /** How many previously-live rows were summarized away (pointed at the summary head). */
+  /** How many previously-live rows were summarized away (pointed at the summary). */
   archivedCount: number;
-  /** The freshly inserted summary rows (now the head of the live context). */
-  summary: TranscriptMessage[];
+  /** The freshly inserted summary row, now sitting between head and tail. */
+  summary: TranscriptMessage;
 };

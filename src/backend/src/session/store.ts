@@ -1,4 +1,5 @@
 import type {
+  CompactionBoundary,
   CompactionResult,
   GetMessagesOptions,
   NewMessage,
@@ -24,8 +25,10 @@ import type {
  *
  * Implementation contract:
  *  - `appendMessages` and `compact` MUST be atomic (single transaction each).
- *  - `getMessages` MUST order by `id` (insertion order), never by timestamp —
- *    wall clocks can regress and scramble turns.
+ *  - `appendMessages` MUST set `seq = id` so conversation order and insertion
+ *    order agree for everything except a compaction summary.
+ *  - `getMessages` MUST order by `(seq, id)` (conversation order), never by
+ *    timestamp — wall clocks can regress and scramble turns.
  *  - `createSession` MUST fail if a live session already exists for the key
  *    (the partial unique index enforces this) — end the old one first to reset.
  *  - All timestamps are epoch **seconds** (float), matching the schema.
@@ -65,19 +68,35 @@ export interface SessionStore {
   appendMessages(sessionId: string, messages: NewMessage[]): Promise<TranscriptMessage[]>;
 
   /**
-   * Load transcript rows, ordered by `id`. Defaults to live context only
+   * Load transcript rows in conversation order. Defaults to live context only
    * (`compacted_by_id IS NULL`); the returned `payload`s feed pi's `initialState.messages`.
    */
   getMessages(sessionId: string, opts?: GetMessagesOptions): Promise<TranscriptMessage[]>;
 
   /**
-   * In-place compaction, atomically:
-   *   1. insert `summary` as fresh live rows (the summary head is the first),
-   *   2. point every prior live row's `compacted_by_id` at the summary head.
-   * Live context after this is `getMessages(id)` (rows with `compacted_by_id IS NULL`);
-   * the `sessionId` never rotates. A summary of many rounds forms a walkable chain.
+   * In-place compaction of one span, atomically:
+   *   1. insert `summary` as a live row at `boundary.seq`, marked `is_summary`,
+   *   2. point every other live row with `afterSeq < seq < beforeSeq` at it.
+   *
+   * Live context afterwards is `[head] + [summary] + [tail]` — the caller picks
+   * those bounds; the store only executes them. The `sessionId` never rotates.
+   *
+   * Exactly one summary is live at a time: a previous summary sits inside the
+   * span and is folded into the new one, so summaries never chain.
+   *
+   * Rows appended between the caller computing `boundary` and this call landing
+   * take the next `seq` from the sequence, which is above `beforeSeq`, so they
+   * are never archived. That is what makes a span safe here where a "retain
+   * these ids" list would not be.
+   *
+   * MUST throw (rolling back the summary insert) if the span matches no live
+   * rows, rather than leaving a summary that describes nothing.
    */
-  compact(sessionId: string, summary: NewMessage[]): Promise<CompactionResult>;
+  compact(
+    sessionId: string,
+    summary: NewMessage,
+    boundary: CompactionBoundary,
+  ): Promise<CompactionResult>;
 
   /** Release any pooled connections / file handles. */
   close(): Promise<void>;
