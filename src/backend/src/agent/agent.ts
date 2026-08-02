@@ -101,7 +101,7 @@ export function createSelfHostedModel(
     id: deploymentName,
     name: deploymentName,
     api: "openai-completions",
-    provider: PROVIDER_ID,
+    provider: deploymentName,
     baseUrl: toBaseURL(endpoint),
     reasoning: false,
     input: ["text"],

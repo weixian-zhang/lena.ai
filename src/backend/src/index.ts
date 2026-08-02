@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { AgentEvent } from "@mariozechner/pi-agent-core";
 import { createPiAgent } from "./agent/agent.js";
 import { tools } from "./agent/tools/index.js";
+import { initContextWindow } from "./token/model-catalog.js";
 
 // System prompt is authored as Markdown and copied into dist by build's copy-assets
 // step, so the .md sits at the same relative path under both tsx (src) and node (dist).
@@ -36,6 +37,10 @@ async function main(): Promise<void> {
     process.exitCode = 1;
     return;
   }
+
+  // Refresh the models.dev cache and pin the deployment's token budget before the loop
+  // starts, so compaction can read it synchronously mid-turn.
+  await initContextWindow();
 
   const agent = createPiAgent({
     systemPrompt: SYSTEM_PROMPT,
