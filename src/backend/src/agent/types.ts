@@ -23,4 +23,4 @@ export type AgentContentBlock = Extract<AgentMessage["content"], readonly unknow
  * Lena's conversational mode — drives the prompt stack (`base + modePrompt(mode)`).
  * Persisted on the session so a resumed conversation keeps its mode.
  */
-export type AgentMode = "plan" | "eyes-wide-shut";
+export type AgentMode = "plan" | "body-surf";

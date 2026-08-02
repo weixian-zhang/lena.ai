@@ -25,10 +25,10 @@ import type {
  *
  * Implementation contract:
  *  - `appendMessages` and `compact` MUST be atomic (single transaction each).
- *  - `appendMessages` MUST set `seq = id` so conversation order and insertion
- *    order agree for everything except a compaction summary.
- *  - `getMessages` MUST order by `(seq, id)` (conversation order), never by
+ *  - `getMessages` MUST order by `id` (which is conversation order), never by
  *    timestamp — wall clocks can regress and scramble turns.
+ *  - `getMessages` MUST exclude summaries unless asked for them, so no caller can
+ *    mistake its output for a ready-to-send context.
  *  - `createSession` MUST fail if a live session already exists for the key
  *    (the partial unique index enforces this) — end the old one first to reset.
  *  - All timestamps are epoch **seconds** (float), matching the schema.
@@ -68,29 +68,52 @@ export interface SessionStore {
   appendMessages(sessionId: string, messages: NewMessage[]): Promise<TranscriptMessage[]>;
 
   /**
-   * Load transcript rows in conversation order. Defaults to live context only
-   * (`compacted_by_id IS NULL`); the returned `payload`s feed pi's `initialState.messages`.
+   * Load transcript rows ordered by `id`. Defaults to live, non-summary rows.
+   *
+   * This is deliberately NOT the model context. A summary sorts last by id rather
+   * than into position, so it is omitted here; the compaction module pairs this
+   * with {@link SessionStore.getLiveSummary} and splices the summary in at its
+   * `compactedStartId` before handing the array to the agent. Passing the raw
+   * output straight to pi would silently present a summary of old history as the
+   * newest turn.
    */
   getMessages(sessionId: string, opts?: GetMessagesOptions): Promise<TranscriptMessage[]>;
 
   /**
+   * The session's live compaction summary, or `null` if it has never been
+   * compacted. At most one exists — `compact` archives the previous one on every
+   * run. Splice it into {@link SessionStore.getMessages} output directly *before*
+   * the first row whose id is `>= summary.compactedStartId` — first-greater, not
+   * equality, since the row that id names was archived by that same compaction.
+   */
+  getLiveSummary(sessionId: string): Promise<TranscriptMessage | null>;
+
+  /**
    * In-place compaction of one span, atomically:
-   *   1. insert `summary` as a live row at `boundary.seq`, marked `is_summary`,
-   *   2. point every other live row with `afterSeq < seq < beforeSeq` at it.
+   *   1. insert `summary` as a live row marked `is_summary`, with
+   *      `compacted_start_id = boundary.startId` as its splice point,
+   *   2. point every other live row with `startId <= id <= endId` at it,
+   *   3. point the previous live summary at it as well, if one exists.
    *
-   * Live context afterwards is `[head] + [summary] + [tail]` — the caller picks
-   * those bounds; the store only executes them. The `sessionId` never rotates.
+   * Both bounds are inclusive and both name rows that are destroyed — the retained
+   * head sits below `startId`, the retained tail above `endId`. Live context
+   * afterwards is `[head] + [summary] + [tail]`; the caller picks the bounds, the
+   * store only executes them. The `sessionId` never rotates.
    *
-   * Exactly one summary is live at a time: a previous summary sits inside the
-   * span and is folded into the new one, so summaries never chain.
+   * Step 3 is separate from step 2 on purpose. The previous summary was written
+   * after the tail it precedes, so its id can be *above* `endId` and outside the
+   * span — leaving it live would put two summaries in context. Archiving it
+   * unconditionally is what keeps "exactly one live summary" true, and means
+   * summaries never chain.
    *
    * Rows appended between the caller computing `boundary` and this call landing
-   * take the next `seq` from the sequence, which is above `beforeSeq`, so they
-   * are never archived. That is what makes a span safe here where a "retain
+   * take the next id from the sequence, which is strictly above `endId`, so they
+   * are never archived. That is what makes a range safe here where a "retain
    * these ids" list would not be.
    *
-   * MUST throw (rolling back the summary insert) if the span matches no live
-   * rows, rather than leaving a summary that describes nothing.
+   * MUST throw (rolling back the whole transaction) if the span matches no live
+   * rows, rather than leaving a summary that describes nothing. Archiving only a
+   * previous summary does NOT satisfy this — the span itself must be non-empty.
    */
   compact(
     sessionId: string,

@@ -47,8 +47,8 @@ type MessageRow = {
   session_id: string;
   role: string;
   content: string;
-  seq: number;
   is_summary: number;
+  compacted_start_id: number | null;
   created_at: number;
   compacted_by_id: number | null;
 };
@@ -70,10 +70,10 @@ function toMessage(r: MessageRow): TranscriptMessage {
   return {
     id: r.id,
     sessionId: r.session_id,
-    seq: r.seq,
     role: r.role as MessageRole,
     payload: JSON.parse(r.content) as AgentMessage,
     isSummary: r.is_summary === 1,
+    compactedStartId: r.compacted_start_id,
     compactedById: r.compacted_by_id,
     createdAt: r.created_at,
   };
@@ -180,23 +180,19 @@ export class SqliteSessionStore implements SessionStore {
     const insert = this.db.prepare(
       `INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)`,
     );
-    // seq = id for ordinary appends. Set in a second statement rather than a
-    // subquery so the value comes from the sequence itself and can't race.
-    const setSeq = this.db.prepare(`UPDATE messages SET seq = id WHERE id = ?`);
     const tx = this.db.transaction((batch: NewMessage[]): TranscriptMessage[] => {
       const out: TranscriptMessage[] = [];
       for (const m of batch) {
         const createdAt = m.createdAt ?? nowSec();
         const info = insert.run(sessionId, m.role, JSON.stringify(m.payload), createdAt);
         const id = Number(info.lastInsertRowid);
-        setSeq.run(id);
         out.push({
           id,
           sessionId,
-          seq: id,
           role: m.role,
           payload: m.payload,
           isSummary: false,
+          compactedStartId: null,
           compactedById: null,
           createdAt,
         });
@@ -210,7 +206,8 @@ export class SqliteSessionStore implements SessionStore {
     let sql = `SELECT * FROM messages WHERE session_id = ?`;
     const vals: (string | number)[] = [sessionId];
     if (!opts.includeInactive) sql += ` AND compacted_by_id IS NULL`;
-    sql += ` ORDER BY seq, id`; // conversation order — never timestamp
+    if (!opts.includeSummaries) sql += ` AND is_summary = 0`;
+    sql += ` ORDER BY id`; // conversation order — never timestamp
     if (opts.limit !== undefined) {
       sql += ` LIMIT ?`;
       vals.push(opts.limit);
@@ -225,22 +222,43 @@ export class SqliteSessionStore implements SessionStore {
     return rows.map(toMessage);
   }
 
+  async getLiveSummary(sessionId: string): Promise<TranscriptMessage | null> {
+    // At most one row can match; ORDER BY id guards against a bug upstream ever
+    // leaving two, by picking the newest rather than an arbitrary one.
+    const row = this.db
+      .prepare(
+        `SELECT * FROM messages
+          WHERE session_id = ? AND compacted_by_id IS NULL AND is_summary = 1
+          ORDER BY id DESC LIMIT 1`,
+      )
+      .get(sessionId) as MessageRow | undefined;
+    return row ? toMessage(row) : null;
+  }
+
   async compact(
     sessionId: string,
     summary: NewMessage,
     boundary: CompactionBoundary,
   ): Promise<CompactionResult> {
     const insert = this.db.prepare(
-      `INSERT INTO messages (session_id, role, content, seq, is_summary, created_at)
-       VALUES (?, ?, ?, ?, 1, ?)`,
+      `INSERT INTO messages (session_id, role, content, is_summary, compacted_start_id, created_at)
+       VALUES (?, ?, ?, 1, ?, ?)`,
     );
-    // Archive by conversation-order span. `id <> ?` keeps the summary just
-    // inserted — whose seq is inside the span by construction — from archiving
-    // itself. Concurrent appends land above beforeSeq and are left alone.
-    const archiveStmt = this.db.prepare(
+    // Archive the span. Bounds are inclusive — both name rows being destroyed, so
+    // the retained head and first tail row sit outside them. Concurrent appends
+    // take ids above endId and are left alone; the summary just inserted is above
+    // it too, so it can't archive itself.
+    const archiveSpan = this.db.prepare(
       `UPDATE messages SET compacted_by_id = ?
-       WHERE session_id = ? AND compacted_by_id IS NULL AND id <> ?
-         AND seq > ? AND seq < ?`,
+       WHERE session_id = ? AND compacted_by_id IS NULL AND is_summary = 0
+         AND id >= ? AND id <= ?`,
+    );
+    // The previous summary sits outside the span whenever its id landed above
+    // endId, so it needs archiving by identity, not by range. `id <> ?` spares
+    // the one just inserted.
+    const archivePrevSummary = this.db.prepare(
+      `UPDATE messages SET compacted_by_id = ?
+       WHERE session_id = ? AND compacted_by_id IS NULL AND is_summary = 1 AND id <> ?`,
     );
     const tx = this.db.transaction((): CompactionResult => {
       const createdAt = summary.createdAt ?? nowSec();
@@ -248,36 +266,34 @@ export class SqliteSessionStore implements SessionStore {
         sessionId,
         summary.role,
         JSON.stringify(summary.payload),
-        boundary.seq,
+        boundary.startId,
         createdAt,
       );
       const id = Number(info.lastInsertRowid);
-      const archivedCount = archiveStmt.run(
-        id,
-        sessionId,
-        id,
-        boundary.afterSeq,
-        boundary.beforeSeq,
-      ).changes;
 
-      // A stale boundary would leave a summary describing nothing. Throwing
-      // rolls the insert back with it.
-      if (archivedCount === 0) {
+      const spanCount = archiveSpan.run(id, sessionId, boundary.startId, boundary.endId).changes;
+
+      // A stale boundary would leave a summary describing nothing. Checked on the
+      // span alone — folding in the previous summary isn't compaction progress.
+      // Throwing rolls the insert back with it.
+      if (spanCount === 0) {
         throw new Error(
-          `compact: no live rows in (${boundary.afterSeq}, ${boundary.beforeSeq}) ` +
+          `compact: no live rows in [${boundary.startId}, ${boundary.endId}] ` +
             `for session ${sessionId}`,
         );
       }
 
+      const prevCount = archivePrevSummary.run(id, sessionId, id).changes;
+
       return {
-        archivedCount,
+        archivedCount: spanCount + prevCount,
         summary: {
           id,
           sessionId,
-          seq: boundary.seq,
           role: summary.role,
           payload: summary.payload,
           isSummary: true,
+          compactedStartId: boundary.startId,
           compactedById: null,
           createdAt,
         },

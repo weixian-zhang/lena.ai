@@ -24,8 +24,10 @@ export type StoreMode = "LOCAL" | "CLOUD";
  * summary is stored as an ordinary message row (a live row that other, older rows
  * now point at via `compactedById`), distinguished only by `isSummary`.
  *
- * A summary is written as `assistant` so the compacted context still alternates:
- * `user` (head) → `assistant` (summary) → `user` (first retained turn).
+ * A summary is written as `assistant` — it reads as Lena recounting the omitted
+ * span. This does not guarantee strict role alternation: retaining a tool-call
+ * pair can make the first tail row an `assistant` message too, putting two in a
+ * row. The OpenAI-compatible Foundry endpoint accepts that.
  */
 export type MessageRole = "user" | "assistant" | "toolResult";
 
@@ -78,29 +80,50 @@ export type SessionPatch = {
   mode?: AgentMode;
 };
 
-/** A persisted transcript row. `id` is insertion order; `seq` is conversation order. */
+/**
+ * A persisted transcript row. `id` is both insertion order and conversation
+ * order — see {@link TranscriptMessage.id} for the single exception.
+ */
 export type TranscriptMessage = {
-  /** Autoincrement id — insertion order, and the target of `compactedById`. */
+  /**
+   * Autoincrement id. Doubles as the conversation-order key and is the target of
+   * `compactedById`.
+   *
+   * Every ordinary append satisfies both meanings at once. A compaction summary
+   * is the one row where they disagree: it is written *after* the tail it
+   * logically precedes, so it always carries the highest id. Sorting by `id`
+   * therefore places the summary last, not between head and tail — which is why
+   * it is excluded from {@link SessionStore.getMessages} and repositioned by the
+   * compaction module using {@link TranscriptMessage.compactedStartId}.
+   */
   id: number;
   sessionId: string;
-  /**
-   * Conversation-order key. Ordinary appends get `seq = id`, so the two agree.
-   * They diverge only for a compaction summary, which is written *after* the tail
-   * it precedes and so carries a fractional `seq` that sorts it back into place.
-   * Not unique: an archived row may share a `seq` with the summary that replaced
-   * its span, which is harmless because only one of them is ever live.
-   */
-  seq: number;
   /** Denormalized from `payload.role` for cheap filtering. */
   role: MessageRole;
   /** The full pi message, round-tripped losslessly (stored as JSON in `content`). */
   payload: AgentMessage;
   /**
    * True for a compaction summary. At most one summary is live at a time — a new
-   * compaction folds the previous one in and archives it — so this doubles as the
-   * lookup for "the summary currently in context".
+   * compaction archives the previous one unconditionally — so this doubles as the
+   * lookup for "the summary currently in context" ({@link SessionStore.getLiveSummary}).
    */
   isSummary: boolean;
+  /**
+   * Splice point, summary rows only (`null` otherwise): the id the replaced span
+   * started at ({@link CompactionBoundary.startId}). Carries the position that
+   * `id` cannot, so the compaction module can rebuild `[head] [summary] [tail]`
+   * without inferring anything from the head's size.
+   *
+   * Splice by *first-greater*, not equality — insert the summary before the first
+   * live row whose `id >= compactedStartId`. The row this id names was archived by
+   * this very compaction, so it is not in the live set to match against. This also
+   * lands correctly when the head or the tail is empty.
+   *
+   * Deliberately not paired with an `endId` column: this is a splice point, not
+   * lineage. `compactedById` is the exact record of what was archived, and a stored
+   * range would misdescribe it — a folded-in previous summary sits above `endId`.
+   */
+  compactedStartId: number | null;
   /**
    * Liveness + compaction lineage in one field:
    *  - `null` → live (in the context window; `WHERE compacted_by_id IS NULL` reconstructs it).
@@ -121,8 +144,14 @@ export type NewMessage = {
 
 /** Options for {@link SessionStore.getMessages}. */
 export type GetMessagesOptions = {
-  /** Include compacted (`compacted_by_id IS NOT NULL`) rows. Default `false` → live context only. */
+  /** Include compacted (`compacted_by_id IS NOT NULL`) rows. Default `false` → live rows only. */
   includeInactive?: boolean;
+  /**
+   * Include compaction summaries. Default `false`, because a summary's id sorts
+   * it last rather than into position — see {@link SessionStore.getMessages}.
+   * Only set this for audit/replay reads that don't feed the model.
+   */
+  includeSummaries?: boolean;
   /** Max rows to return, ordered by `id`. */
   limit?: number;
   /** Rows to skip (pagination). */
@@ -130,32 +159,40 @@ export type GetMessagesOptions = {
 };
 
 /**
- * The span {@link SessionStore.compact} replaces: every live row strictly between
- * the retained head and the retained tail, in conversation order.
+ * The span {@link SessionStore.compact} replaces. **Inclusive on both ends, and
+ * both ends name rows that are destroyed** — `startId` is the first compacted
+ * message, `endId` the last. The retained head sits below `startId` and the
+ * retained tail above `endId`; neither bound touches them.
  *
- * Bounds are `seq`, not `id`. The two diverge after the first compaction — a
- * summary is inserted *later* than the tail rows it precedes, so it carries a
- * higher `id` alongside a lower `seq`. An id range would then either miss the
- * previous summary or swallow a retained tail row, depending on where the next
- * tail happens to start.
+ * ```
+ * ids:    1      2  3  4  5  6      7 ...
+ *       [head] [ compacted span ] [tail]
+ *              startId=2  endId=6         → archive WHERE id >= 2 AND id <= 6
+ * ```
+ *
+ * `startId` is also stored on the summary row as its splice point — see
+ * {@link TranscriptMessage.compactedStartId}. It cannot be derived from the head's
+ * id: `messages.id` is a table-wide sequence, so a session's ids are sparse and
+ * `startId - 1` is not necessarily (or even usually) the head row.
+ *
+ * The range does *not* cover a previous summary: that row was written after the
+ * tail it precedes, so its id can fall above `endId`. `compact` archives it
+ * explicitly rather than relying on the bounds to catch it.
  */
 export type CompactionBoundary = {
-  /** Exclusive lower bound — the `seq` of the last retained head row. */
-  afterSeq: number;
-  /** Exclusive upper bound — the `seq` of the first retained tail row. */
-  beforeSeq: number;
-  /**
-   * `seq` to give the summary so it sorts between head and tail. Must lie strictly
-   * within `(afterSeq, beforeSeq)`; `afterSeq + 0.5` is the obvious choice, and
-   * never collides with an integer `seq` already in use.
-   */
-  seq: number;
+  /** Inclusive lower bound — the id of the first message compacted away. */
+  startId: number;
+  /** Inclusive upper bound — the id of the last message compacted away. */
+  endId: number;
 };
 
 /** Result of a {@link SessionStore.compact} call. */
 export type CompactionResult = {
-  /** How many previously-live rows were summarized away (pointed at the summary). */
+  /**
+   * How many previously-live rows were summarized away (pointed at the summary):
+   * the in-span rows plus the previous summary, if there was one.
+   */
   archivedCount: number;
-  /** The freshly inserted summary row, now sitting between head and tail. */
+  /** The freshly inserted summary row. Its `compactedStartId` is where it belongs in context. */
   summary: TranscriptMessage;
 };

@@ -46,17 +46,17 @@ type SessionRow = {
 };
 
 /**
- * Raw `messages` row. `id` and `compacted_by_id` are BIGINT, which node-postgres
- * returns as *strings* (to avoid silent precision loss) — normalized in toMessage.
- * `is_summary` is SMALLINT (0/1) to match the SQLite shape.
+ * Raw `messages` row. `id`, `compacted_start_id` and `compacted_by_id` are BIGINT,
+ * which node-postgres returns as *strings* (to avoid silent precision loss) —
+ * normalized in toMessage. `is_summary` is SMALLINT (0/1) to match SQLite.
  */
 type MessageRow = {
   id: string;
   session_id: string;
   role: string;
   content: string;
-  seq: number;
   is_summary: number;
+  compacted_start_id: string | null;
   created_at: number;
   compacted_by_id: string | null;
 };
@@ -78,10 +78,10 @@ function toMessage(r: MessageRow): TranscriptMessage {
   return {
     id: Number(r.id),
     sessionId: r.session_id,
-    seq: r.seq,
     role: r.role as MessageRole,
     payload: JSON.parse(r.content) as AgentMessage,
     isSummary: r.is_summary === 1,
+    compactedStartId: r.compacted_start_id === null ? null : Number(r.compacted_start_id),
     compactedById: r.compacted_by_id === null ? null : Number(r.compacted_by_id),
     createdAt: r.created_at,
   };
@@ -212,17 +212,13 @@ export class PostgresSessionStore implements SessionStore {
           [sessionId, m.role, JSON.stringify(m.payload), createdAt],
         );
         const id = Number(res.rows[0].id);
-        // seq = id for ordinary appends. A separate statement because a CTE can't
-        // see its own INSERT's rows, and it takes the value from IDENTITY so it
-        // can't race a concurrent append.
-        await client.query(`UPDATE messages SET seq = id WHERE id = $1`, [id]);
         out.push({
           id,
           sessionId,
-          seq: id,
           role: m.role,
           payload: m.payload,
           isSummary: false,
+          compactedStartId: null,
           compactedById: null,
           createdAt,
         });
@@ -236,7 +232,8 @@ export class PostgresSessionStore implements SessionStore {
     const vals: unknown[] = [sessionId];
     let i = 2;
     if (!opts.includeInactive) sql += ` AND compacted_by_id IS NULL`;
-    sql += ` ORDER BY seq, id`; // conversation order — never timestamp
+    if (!opts.includeSummaries) sql += ` AND is_summary = 0`;
+    sql += ` ORDER BY id`; // conversation order — never timestamp
     if (opts.limit !== undefined) {
       sql += ` LIMIT $${i++}`;
       vals.push(opts.limit);
@@ -250,6 +247,19 @@ export class PostgresSessionStore implements SessionStore {
     return (res.rows as MessageRow[]).map(toMessage);
   }
 
+  async getLiveSummary(sessionId: string): Promise<TranscriptMessage | null> {
+    // At most one row can match; ORDER BY id guards against a bug upstream ever
+    // leaving two, by picking the newest rather than an arbitrary one.
+    const res = await this.pool.query(
+      `SELECT * FROM messages
+        WHERE session_id = $1 AND compacted_by_id IS NULL AND is_summary = 1
+        ORDER BY id DESC LIMIT 1`,
+      [sessionId],
+    );
+    const row = (res.rows as MessageRow[])[0];
+    return row ? toMessage(row) : null;
+  }
+
   async compact(
     sessionId: string,
     summary: NewMessage,
@@ -258,41 +268,52 @@ export class PostgresSessionStore implements SessionStore {
     return this.withTx(async (client) => {
       const createdAt = summary.createdAt ?? nowSec();
       const ins = await client.query(
-        `INSERT INTO messages (session_id, role, content, seq, is_summary, created_at)
-         VALUES ($1, $2, $3, $4, 1, $5) RETURNING id`,
-        [sessionId, summary.role, JSON.stringify(summary.payload), boundary.seq, createdAt],
+        `INSERT INTO messages (session_id, role, content, is_summary, compacted_start_id, created_at)
+         VALUES ($1, $2, $3, 1, $4, $5) RETURNING id`,
+        [sessionId, summary.role, JSON.stringify(summary.payload), boundary.startId, createdAt],
       );
       const id = Number(ins.rows[0].id);
 
-      // Archive by conversation-order span. `id <> $1` keeps the summary just
-      // inserted — whose seq is inside the span by construction — from archiving
-      // itself. Concurrent appends land above beforeSeq and are left alone.
-      const upd = await client.query(
+      // Archive the span. Bounds are inclusive — both name rows being destroyed, so
+      // the retained head and first tail row sit outside them. Concurrent appends
+      // take ids above endId and are left alone; the summary just inserted is above
+      // it too, so it can't archive itself.
+      const span = await client.query(
         `UPDATE messages SET compacted_by_id = $1
-         WHERE session_id = $2 AND compacted_by_id IS NULL AND id <> $1
-           AND seq > $3 AND seq < $4`,
-        [id, sessionId, boundary.afterSeq, boundary.beforeSeq],
+         WHERE session_id = $2 AND compacted_by_id IS NULL AND is_summary = 0
+           AND id >= $3 AND id <= $4`,
+        [id, sessionId, boundary.startId, boundary.endId],
       );
-      const archivedCount = upd.rowCount ?? 0;
+      const spanCount = span.rowCount ?? 0;
 
-      // A stale boundary would leave a summary describing nothing. Throwing
-      // rolls the insert back with it.
-      if (archivedCount === 0) {
+      // A stale boundary would leave a summary describing nothing. Checked on the
+      // span alone — folding in the previous summary isn't compaction progress.
+      // Throwing rolls the insert back with it.
+      if (spanCount === 0) {
         throw new Error(
-          `compact: no live rows in (${boundary.afterSeq}, ${boundary.beforeSeq}) ` +
+          `compact: no live rows in [${boundary.startId}, ${boundary.endId}] ` +
             `for session ${sessionId}`,
         );
       }
 
+      // The previous summary sits outside the span whenever its id landed above
+      // endId, so it needs archiving by identity, not by range. `id <> $1`
+      // spares the one just inserted.
+      const prev = await client.query(
+        `UPDATE messages SET compacted_by_id = $1
+         WHERE session_id = $2 AND compacted_by_id IS NULL AND is_summary = 1 AND id <> $1`,
+        [id, sessionId],
+      );
+
       return {
-        archivedCount,
+        archivedCount: spanCount + (prev.rowCount ?? 0),
         summary: {
           id,
           sessionId,
-          seq: boundary.seq,
           role: summary.role,
           payload: summary.payload,
           isSummary: true,
+          compactedStartId: boundary.startId,
           compactedById: null,
           createdAt,
         },
