@@ -6,7 +6,7 @@ import {
   getContextWindow,
   initContextWindow,
   resetContextWindow,
-} from "../src/util/model-catalog.js";
+} from "../src/model-catalog.js";
 
 // Offline unit test: every models.dev response is stubbed, so this never hits the network,
 // and the cache directory is redirected to a temp dir so it never touches ~/.lena.

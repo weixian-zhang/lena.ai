@@ -3,15 +3,15 @@
 // Planning only — this module decides *what* to compact. Writing the summary and
 // archiving the rows is SessionStore.compact's job.
 
-import type { AgentMessage } from "../agent/types.js";
-import type { CompactionBoundary, TranscriptMessage } from "../session/types.js";
-import { estimateTokens } from "../token/token-estimator.js";
+import type { AgentMessage } from "./agent/types.js";
+import type { CompactionBoundary, TranscriptMessage } from "./session/types.js";
+import { estimateTokens } from "./token-estimator.js";
 import {
   COMPACTION_TAIL_TOKENS,
   CONTEXT_HEAD_ROOM_TOKEN,
   TOOL_RESULT_TRUNCATE_CHARS,
-} from "../util/config.js";
-import { getContextWindow } from "../util/model-catalog.js";
+} from "./util/config.js";
+import { getContextWindow } from "./model-catalog.js";
 
 /** What to compact. Feed `messages` to the summarizer, `boundary` to the store. */
 export type CompactionPlan = {

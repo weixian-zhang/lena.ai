@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { compact, shouldCompact } from "../src/compaction/compaction.js";
+import { compact, shouldCompact } from "../src/compaction.js";
 import { CONTEXT_HEAD_ROOM_TOKEN, TOOL_RESULT_TRUNCATE_CHARS } from "../src/util/config.js";
 import type { AgentMessage } from "../src/agent/types.js";
 import type { TranscriptMessage } from "../src/session/types.js";

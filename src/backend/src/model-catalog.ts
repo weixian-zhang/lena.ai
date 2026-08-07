@@ -4,7 +4,7 @@
 // lags behind the deployments we run — so we fetch the catalogue ourselves and cache it.
 
 import { readFile, stat, writeFile } from "node:fs/promises";
-import { cacheDir } from "./cwd.js";
+import { cacheDir } from "./util/cwd.js";
 import {
   CONTEXT_WINDOW_TOKENS,
   MAX_OUTPUT_TOKENS,
@@ -12,7 +12,7 @@ import {
   MODELS_DEV_FETCH_TIMEOUT_MS,
   MODELS_DEV_PROVIDERS,
   MODELS_DEV_URL,
-} from "./config.js";
+} from "./util/config.js";
 
 /**
  * Reasoning effort levels Lena uses. models.dev also lists `none`, `xhigh` and `max`;

@@ -2,14 +2,14 @@
 // deployment name over an OpenAI-compatible endpoint, so the BPE vocabulary is
 // unknowable and any real tokenizer would be confidently wrong.
 
-import type { AgentContentBlock, AgentMessage } from "../agent/types.js";
+import type { AgentContentBlock, AgentMessage } from "./agent/types.js";
 import {
   CHARS_PER_TOKEN,
   IMAGE_TOKENS,
   JSON_CHARS_PER_TOKEN,
   MESSAGE_OVERHEAD_TOKENS,
   PDF_TOKENS,
-} from "../util/config.js";
+} from "./util/config.js";
 
 /**
  * Estimate tokens for a text string from its character count.
