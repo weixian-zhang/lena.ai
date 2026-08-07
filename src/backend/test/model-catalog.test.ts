@@ -6,15 +6,15 @@ import {
   getContextWindow,
   initContextWindow,
   resetContextWindow,
-} from "../src/token/model-catalog.js";
+} from "../src/util/model-catalog.js";
 
 // Offline unit test: every models.dev response is stubbed, so this never hits the network,
 // and the cache directory is redirected to a temp dir so it never touches ~/.lena.
 
 const mocks = vi.hoisted(() => ({ cacheDir: "" }));
 
-vi.mock("../src/cwd.js", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../src/cwd.js")>()),
+vi.mock("../src/util/cwd.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/util/cwd.js")>()),
   cacheDir: (...segments: string[]) => join(mocks.cacheDir, ...segments),
 }));
 

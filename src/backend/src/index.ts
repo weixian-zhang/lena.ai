@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AgentEvent } from "@mariozechner/pi-agent-core";
 import { createPiAgent } from "./agent/agent.js";
 import { tools } from "./agent/tools/index.js";
-import { initContextWindow } from "./token/model-catalog.js";
+import { initContextWindow } from "./util/model-catalog.js";
 
 // System prompt is authored as Markdown and copied into dist by build's copy-assets
 // step, so the .md sits at the same relative path under both tsx (src) and node (dist).

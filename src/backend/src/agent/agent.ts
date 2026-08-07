@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
 import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
 import { streamSimple, type Model } from "@mariozechner/pi-ai";
-import { CONTEXT_WINDOW_TOKENS, MAX_OUTPUT_TOKENS } from "../config.js";
+import { CONTEXT_WINDOW_TOKENS, MAX_OUTPUT_TOKENS } from "../util/config.js";
 import { injectTopography, invalidateTopographyAfterMutation } from "./ground-topography.js";
 
 // Load src/backend/.env into process.env for local development

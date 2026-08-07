@@ -9,7 +9,7 @@ import {
   JSON_CHARS_PER_TOKEN,
   MESSAGE_OVERHEAD_TOKENS,
   PDF_TOKENS,
-} from "../config.js";
+} from "../util/config.js";
 
 /**
  * Estimate tokens for a text string from its character count.

@@ -22,6 +22,9 @@ export const PDF_TOKENS = 25_800;
 /** Max chars kept from a single tool result before it is truncated. */
 export const TOOL_RESULT_TRUNCATE_CHARS = 2_000;
 
+/** Recent transcript kept verbatim through a compaction, as `[head] [summary] [tail]`. */
+export const COMPACTION_TAIL_TOKENS = 20_000;
+
 /**
  * Fallback context window, used only when the deployment can't be resolved against
  * models.dev. Deliberately conservative: over-estimating the window skips compaction
@@ -42,7 +45,7 @@ export const MAX_OUTPUT_TOKENS = 32_768;
  * ride along uncounted. Erring large just compacts sooner; erring small overflows the
  * request mid-operation.
  */
-export const CONTEXT_HEAD_ROOM_TOKEN = 20_000;
+export const CONTEXT_HEAD_ROOM_TOKEN = 16_384;
 
 /** Public model catalogue we resolve the deployment's context window against. */
 export const MODELS_DEV_URL = "https://models.dev/api.json";
